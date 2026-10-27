@@ -290,6 +290,33 @@ details.plan[open] summary{border-bottom:1px solid var(--border)}
   .export-opt{flex-direction:column}
   .week{min-width:0;flex:1}
 }
+
+/* ── Biblioteca ──────────────────────────────────────────── */
+.seg.marcas{flex-wrap:nowrap}
+.seg.marcas button{flex:none}
+.doc-grupo{display:flex;flex-direction:column;gap:12px;margin-bottom:32px}
+.grupo-t{font-size:var(--fs-sub);font-weight:600;display:flex;align-items:center;gap:8px}
+.docs{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.doc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh1);padding:16px;display:flex;flex-direction:column;gap:8px;transition:border-color .15s,box-shadow .15s}
+.doc:hover{border-color:var(--border-strong);box-shadow:var(--sh2)}
+.tipo{display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-label);font-weight:600;color:var(--muted)}
+.tipo svg{width:14px;height:14px}
+.doc-t{font-weight:600;color:var(--text);text-decoration:none;line-height:1.4}
+.doc-t:hover{color:var(--primary);text-decoration:underline}
+.doc-desc{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.doc .card-foot{margin-top:auto;padding-top:8px}
+.vis{display:inline-flex;align-items:center;gap:6px;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.vis svg{width:14px;height:14px;flex:none}
+.btn.sm{height:32px;padding:0 12px;font-size:var(--fs-label)}
+.btn.btn-icon.sm{width:32px;padding:0}
+a.btn{text-decoration:none}
+.personas{display:flex;flex-direction:column;gap:8px;margin-top:8px;padding:12px 16px;border:1px solid var(--border);border-radius:var(--r)}
+.persona{display:flex;align-items:center;gap:8px;cursor:pointer}
+.persona input{width:16px;height:16px;accent-color:var(--primary)}
+@media (max-width:767px){
+  .seg.marcas{width:100%;overflow-x:auto}
+  .docs{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
@@ -303,7 +330,7 @@ details.plan[open] summary{border-bottom:1px solid var(--border)}
    Si la dejas vacía, la app funciona en MODO DEMO (datos solo en
    este navegador) para que puedas probarla.
    ════════════════════════════════════════════════════════════ */
-const API_URL = 'https://script.google.com/macros/s/AKfycbxzd_ror2aSmIitCfKnuCSQvQtBlm5_qwH-38w2VH0m5occj3KOFN0BVpBeVclhx-k-wA/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbzo997HfbiUGJqu2or6tPqMp8L5C0-fDYIYb4HEQDId7TVE-MTn3KH7GLf7oxkA4nNRAg/exec';
 
 /* Estatus del plan = columnas del tablero (deben coincidir con Code.gs). */
 const ESTADOS = ['Programado', 'En proceso', 'En revisión', 'Terminado'];
@@ -321,6 +348,16 @@ const BLOQUES = [
 ];
 /* Columnas que se omiten si alguien copia A–T con las ocultas incluidas (D a I). */
 const OCULTAS = [3, 4, 5, 6, 7, 8];
+/* Avance automático según el estatus (se puede cambiar a mano). % Diario toma el valor; % Acumulado sube a él pero nunca baja solo. */
+const PCT_ESTADO = { 'Programado': 0, 'En proceso': 50, 'En revisión': 80, 'Terminado': 100 };
+function pctPorEstado(a, estado) {
+  const p = PCT_ESTADO[estado];
+  if (p === undefined) return {};
+  return { pctDiario: String(p), pctAcum: String(Math.max(Number(a.pctAcum || 0), p)) };
+}
+/* Reinicio diario (lo hace el servidor con un activador; aquí solo se usa en modo demo). */
+const HORA_REINICIO = 23;
+const MARCAS = ['General', 'Afinazone', 'Omova Carbon Fiber', 'Omova Comercializadora'];
 const SUGERENCIAS = { tipo: ['Operativa', 'Avance', 'Proyecto'], prealineacion: ['Minuta'], frecuencia: ['Diaria', 'Semanal', 'Mensual', 'Trimestral'] };
 
 /* ── Íconos ──────────────────────────────────────────────── */
@@ -339,6 +376,11 @@ const I = {
   cal: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>',
   user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
   logout: '<path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h11"/>',
+  book: '<path d="M4 4h6a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H4z"/><path d="M20 4h-6a2 2 0 0 0-2 2v14a2 2 0 0 1 2-2h6z"/>',
+  external: '<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
+  edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13 7 4 4"/>',
+  lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+  users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/>',
   refresh: '<path d="M20 11a8 8 0 0 0-14.9-3M4 4v4h4M4 13a8 8 0 0 0 14.9 3M20 20v-4h-4"/>',
   chevron: '<path d="m9 6 6 6-6 6"/>',
   file: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/>'
@@ -443,6 +485,7 @@ const S = {
   token: null, user: null, usuarios: [], acts: [], rev: 0, semana: null,
   vista: 'tablero', colMovil: ESTADOS[1], verFiltros: false,
   f: { q: '', resp: '', tipo: '', frec: '', mias: false },
+  docs: [], bib: { q: '', marca: '' }, docEdit: null,
   edit: null, imp: null, hist: { registros: [], usuario: '', q: '', cargando: false },
   pendientes: 0
 };
@@ -494,6 +537,7 @@ function render() {
     <nav class="rail" aria-label="Menú principal">
       <div class="brand-mark" title="NEXO Workspace">N</div>
       <button class="nav-item" data-nav="tablero" ${S.vista === 'tablero' ? 'aria-current="page"' : ''}>${ico('board')}Tablero</button>
+      <button class="nav-item" data-nav="biblioteca" ${S.vista === 'biblioteca' ? 'aria-current="page"' : ''}>${ico('book')}Biblioteca</button>
       <button class="nav-item" data-nav="historial" ${S.vista === 'historial' ? 'aria-current="page"' : ''}>${ico('history')}Historial</button>
       <div class="rail-foot">
         <span class="avatar lg" title="${esc(S.user.nombre)}">${esc(iniciales(S.user.nombre))}</span>
@@ -508,8 +552,8 @@ function render() {
 }
 function renderMain() {
   const main = $('#main'); if (!main) return;
-  main.innerHTML = S.vista === 'tablero' ? vistaTablero() : vistaHistorial();
-  if (S.vista === 'tablero') bindTablero(); else bindHistorial();
+  main.innerHTML = S.vista === 'tablero' ? vistaTablero() : S.vista === 'biblioteca' ? vistaBiblioteca() : vistaHistorial();
+  if (S.vista === 'tablero') bindTablero(); else if (S.vista === 'biblioteca') bindBiblioteca(); else bindHistorial();
 }
 
 /* ── Login ───────────────────────────────────────────────── */
@@ -554,7 +598,7 @@ function bindLogin() {
 }
 async function salir() { try { await api('logout'); } catch (_) {} salirLocal(); }
 function salirLocal() {
-  S.token = null; S.user = null; S.acts = []; S.edit = null; S.imp = null; S.semana = null;
+  S.token = null; S.user = null; S.acts = []; S.docs = []; S.edit = null; S.imp = null; S.docEdit = null; S.semana = null; S.vista = 'tablero'; S.miasInicial = false;
   S.f = { q: '', resp: '', tipo: '', frec: '', mias: false };
   try { localStorage.removeItem('nexo_token'); localStorage.removeItem('nexo_user'); } catch (_) {}
   cerrarCapas(); cerrarModal(); render();
@@ -607,9 +651,9 @@ function vistaTablero() {
       <button class="chip-toggle" id="btnMias" aria-pressed="${S.f.mias}" title="Solo mis tareas">${ico('user')}<span class="lbl">Solo mías</span></button>
       <button class="chip-toggle" id="btnFiltros" aria-pressed="${S.verFiltros || nf > 0}" aria-expanded="${S.verFiltros}" title="Filtros">${ico('filter')}<span class="lbl">Filtros</span>${nf ? `<span class="count">${nf}</span>` : ''}</button>
       <span class="spacer"></span>
-      ${puedeEditar() ? `<button class="btn btn-sec" id="btnNueva" title="Nueva tarea">${ico('plus')}<span class="lbl">Nueva</span></button>
-      <button class="btn btn-sec" id="btnImportar" title="Importar desde Excel">${ico('upload')}<span class="lbl">Importar</span></button>` : ''}
-      <button class="btn btn-primary" id="btnCopiar">${ico('copy')}Copiar avance</button>
+      ${puedeEditar() ? `<button class="btn btn-sec" id="btnNueva" title="Nueva tarea">${ico('plus')}<span class="lbl">Nueva</span></button>` : ''}
+      ${esAdmin() ? `<button class="btn btn-sec" id="btnImportar" title="Importar desde Excel">${ico('upload')}<span class="lbl">Importar</span></button>
+      <button class="btn btn-primary" id="btnCopiar">${ico('copy')}Copiar avance</button>` : ''}
     </div>
     <div class="filters" ${S.verFiltros ? '' : 'hidden'}>
       <div class="field"><label class="label" for="fResp">Responsable</label>
@@ -623,7 +667,7 @@ function vistaTablero() {
     <div class="board-wrap">
       ${!deSemana().length ? `<div class="table-wrap"><div class="empty">
           <p style="margin-bottom:16px">Aún no hay tareas en la semana ${S.semana}.</p>
-          ${puedeEditar() ? `<button class="btn btn-primary" id="btnImportar2">${ico('upload')}Importar desde Excel</button>` : ''}
+          ${esAdmin() ? `<button class="btn btn-primary" id="btnImportar2">${ico('upload')}Importar desde Excel</button>` : ''}
         </div></div>` : `
       <div class="seg col-tabs" role="tablist">
         ${ESTADOS.map(e => `<button data-tab="${e}" aria-pressed="${S.colMovil === e}">${e} · ${porEstado(e).length}</button>`).join('')}
@@ -663,7 +707,7 @@ function bindTablero() {
   $('#btnFiltros').onclick = () => { S.verFiltros = !S.verFiltros; repintarTablero(); };
   [['#fResp', 'resp'], ['#fTipo', 'tipo'], ['#fFrec', 'frec']].forEach(([sel, k]) => { const el = $(sel); if (el) el.onchange = () => { S.f[k] = el.value; repintarTablero(); }; });
   const lim = $('#btnLimpiar'); if (lim) lim.onclick = () => { S.f.resp = ''; S.f.tipo = ''; S.f.frec = ''; repintarTablero(); };
-  $('#btnCopiar').onclick = abrirExportar;
+  const bc = $('#btnCopiar'); if (bc) bc.onclick = abrirExportar;
   ['#btnImportar', '#btnImportar2'].forEach(s => { const b = $(s); if (b) b.onclick = abrirImportar; });
   const bn = $('#btnNueva'); if (bn) bn.onclick = () => abrirEditor(null);
   document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { S.colMovil = b.dataset.tab; repintarTablero(); });
@@ -691,8 +735,9 @@ async function mover(k, estado) {
   const a = S.acts.find(x => x.clave === k);
   if (!a || a.estado === estado) return;
   const antes = a.estado;
+  const datos = { estado, ...pctPorEstado(a, estado) };
   a.estado = estado; repintarTablero(); marcarTarjeta(k, 'saving');
-  const r = await guardar(() => api('actualizar', { clave: k, datos: { estado }, version: a.version }));
+  const r = await guardar(() => api('actualizar', { clave: k, datos, version: a.version }));
   if (r.ok) { reemplazar(r.actividad); S.rev = r.rev || S.rev; repintarTablero(); marcarTarjeta(k, 'flash'); }
   else {
     if (r.actividad) reemplazar(r.actividad); else if (r.error === 'NOEXISTE') quitar(k); else a.estado = antes;
@@ -795,6 +840,7 @@ function pintarEditor(v) {
         <div class="field"><label class="label" for="edPD">% Diario</label><span class="pct"><input class="input" id="edPD" data-k="pctDiario" inputmode="decimal" value="${esc(v.pctDiario)}" placeholder="0" ${dis}></span></div>
         <div class="field"><label class="label" for="edPA">% Acumulado</label><span class="pct"><input class="input" id="edPA" data-k="pctAcum" inputmode="decimal" value="${esc(v.pctAcum)}" placeholder="0" ${dis}></span></div>
       </div>
+      <p class="hint" style="margin-top:-16px">Al cambiar el estatus se llena solo (En proceso 50%, En revisión 80%, Terminado 100%). Puedes ajustarlo.</p>
       <div class="field"><label class="label" for="edRes">Resultado</label>
         <textarea class="textarea" id="edRes" data-k="resultado" rows="2" style="min-height:64px" placeholder="Qué se logró" ${dis}>${esc(v.resultado)}</textarea></div>
       <div class="field"><label class="label" for="edObs">Observaciones</label>
@@ -849,6 +895,11 @@ function pintarEditor(v) {
   wrap.querySelectorAll('.seg').forEach(seg => seg.onclick = e => {
     const b = e.target.closest('button'); if (!b || b.disabled) return;
     seg.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    if (seg.dataset.seg === 'estado') {
+      // Porcentaje automático por etapa; se puede corregir a mano después.
+      const p = pctPorEstado(S.edit.original, b.dataset.val);
+      if (p.pctDiario !== undefined) { $('#edPD').value = p.pctDiario; $('#edPA').value = p.pctAcum; }
+    }
     revisarCambios();
   });
   const form = $('#edForm');
@@ -1135,14 +1186,15 @@ function vistaHistorial() {
     <div class="board-wrap">
       <div class="table-wrap">
         ${h.cargando && !h.registros.length ? '<div class="empty">Cargando historial…</div>' : !filas.length ? '<div class="empty">No hay movimientos que coincidan.</div>' : `
-        <table class="hist-table"><thead><tr><th>Cuándo</th><th>Quién</th><th>Acción</th><th>Tarea</th><th>Detalle</th></tr></thead>
+        <table class="hist-table"><thead><tr><th>Cuándo</th><th>Quién</th><th>Acción</th><th>Tarea o documento</th><th>Detalle</th></tr></thead>
         <tbody>${filas.map(x => {
+          const esDoc = /^DOC-/.test(x.clave);
           const [sem, ...id] = String(x.clave).split('-');
           return `<tr>
           <td class="hint" style="white-space:nowrap">${esc(x.fecha)}</td>
           <td><span class="who"><span class="avatar">${esc(iniciales(x.usuario))}</span><b style="font-weight:600">${esc(x.usuario)}</b></span></td>
-          <td><span class="badge ${x.accion === 'Eliminó' ? 'bad' : x.accion.startsWith('Import') ? 'info' : ''}">${esc(x.accion)}</span></td>
-          <td><span class="mono">S${esc(sem)} · ${esc(id.join('-'))}</span> ${esc(x.tarea)}</td>
+          <td><span class="badge ${x.accion.startsWith('Eliminó') ? 'bad' : x.accion === 'Reinició' ? 'warn' : x.accion.startsWith('Import') ? 'info' : ''}">${esc(x.accion)}</span></td>
+          <td><span class="mono">${esDoc ? esc(x.clave) : `S${esc(sem)} · ${esc(id.join('-'))}`}</span> ${esc(x.tarea)}</td>
           <td>${x.campo ? `<span class="hint">${esc(x.campo)}:</span> ${esc(fmtValor(x.antes, x.campo) || 'vacío')}<span class="arrow">→</span><b style="font-weight:600">${esc(fmtValor(x.despues, x.campo) || 'vacío')}</b>` : `<span class="hint">${esc(x.antes)}</span>`}</td>
         </tr>`; }).join('')}</tbody></table>`}
       </div>
@@ -1159,6 +1211,213 @@ async function cargarHistorial() {
   try { const r = await api('historial', { limite: 500 }); if (r.ok) S.hist.registros = r.registros; }
   catch (_) { toast('No se pudo cargar el historial.', 'bad'); }
   S.hist.cargando = false; if (S.vista === 'historial') renderMain();
+}
+
+/* ════════════════════════════════════════════════════════════
+   BIBLIOTECA DE DOCUMENTOS (Fase 2)
+   ════════════════════════════════════════════════════════════ */
+function tipoDeEnlace(url) {
+  const u = String(url).toLowerCase();
+  if (u.includes('docs.google.com/spreadsheets')) return 'Google Sheets';
+  if (u.includes('docs.google.com/document')) return 'Google Docs';
+  if (u.includes('docs.google.com/presentation')) return 'Google Slides';
+  if (u.includes('docs.google.com/forms') || u.includes('forms.gle')) return 'Google Forms';
+  if (u.includes('drive.google.com')) return 'Google Drive';
+  if (/sharepoint\.com|onedrive\.live\.com|1drv\.ms|office\.com|live\.com/.test(u)) {
+    if (/\/:x:\/|\.xlsx?\b|excel/.test(u)) return 'Excel en línea';
+    if (/\/:w:\/|\.docx?\b|word/.test(u)) return 'Word en línea';
+    if (/\/:p:\/|\.pptx?\b|powerpoint/.test(u)) return 'PowerPoint en línea';
+    return 'OneDrive';
+  }
+  if (/\.pdf(\?|$)/.test(u)) return 'PDF';
+  return 'Enlace';
+}
+const MARCA_CORTA = { 'General': 'General', 'Afinazone': 'AFZ', 'Omova Carbon Fiber': 'OCF', 'Omova Comercializadora': 'OCM' };
+const nombreDe = usuario => (S.usuarios.find(u => u.usuario === usuario) || {}).nombre || usuario;
+function textoVisible(d) {
+  if (!d.visible || norm(d.visible) === 'todos') return { txt: 'Todo el equipo', icono: 'users' };
+  const lista = d.visible.split(',').map(x => x.trim()).filter(Boolean);
+  if (lista.length === 1 && lista[0] === S.user.usuario) return { txt: 'Solo tú', icono: 'lock' };
+  return { txt: lista.map(u => u === S.user.usuario ? 'Tú' : nombreDe(u).split(' ')[0]).join(', '), icono: 'lock' };
+}
+const esAdmin = () => S.user && S.user.rol === 'admin';
+
+function docsFiltrados() {
+  const q = norm(S.bib.q);
+  return S.docs.filter(d =>
+    (!S.bib.marca || d.marca === S.bib.marca) &&
+    (!q || norm(`${d.titulo} ${d.categoria} ${d.descripcion} ${d.tipo} ${d.marca}`).includes(q))
+  ).sort((a, b) => a.titulo.localeCompare(b.titulo, 'es'));
+}
+function vistaBiblioteca() {
+  const lista = docsFiltrados();
+  const grupos = {};
+  lista.forEach(d => { const c = d.categoria || 'Sin categoría'; (grupos[c] = grupos[c] || []).push(d); });
+  const orden = Object.keys(grupos).sort((a, b) => a === 'Sin categoría' ? 1 : b === 'Sin categoría' ? -1 : a.localeCompare(b, 'es'));
+  return `
+    <header class="topbar">
+      <div><h1>Biblioteca</h1><div class="stats"><span><b>${S.docs.length}</b> documento${S.docs.length === 1 ? '' : 's'}</span></div></div>
+      <span class="sync" id="sync" data-s="ok"><i class="dot"></i><span>Al día</span></span>
+    </header>
+    <div class="toolbar">
+      <label class="search"><span class="sr">Buscar documento</span>${ico('search')}
+        <input class="input" id="bq" placeholder="Buscar documento o categoría" value="${esc(S.bib.q)}"></label>
+      <div class="seg marcas" role="group" aria-label="Marca">
+        <button data-marca="" aria-pressed="${!S.bib.marca}">Todas</button>
+        ${MARCAS.map(m => `<button data-marca="${esc(m)}" aria-pressed="${S.bib.marca === m}" title="${esc(m)}">${esc(MARCA_CORTA[m] || m)}</button>`).join('')}
+      </div>
+      <span class="spacer"></span>
+      ${esAdmin() ? `<button class="btn btn-primary" id="btnDocNuevo">${ico('plus')}Agregar documento</button>` : ''}
+    </div>
+    <div class="board-wrap">
+      ${!S.docs.length ? `<div class="table-wrap"><div class="empty">
+          <p style="margin-bottom:16px">${esAdmin() ? 'Aún no hay documentos. Agrega el primero pegando su enlace.' : 'Aún no hay documentos compartidos contigo.'}</p>
+          ${esAdmin() ? `<button class="btn btn-primary" id="btnDocNuevo2">${ico('plus')}Agregar documento</button>` : ''}
+        </div></div>`
+      : !lista.length ? '<div class="table-wrap"><div class="empty">No hay documentos que coincidan.</div></div>'
+      : orden.map(c => `<section class="doc-grupo"><h2 class="grupo-t">${esc(c)} <span class="badge">${grupos[c].length}</span></h2>
+          <div class="docs">${grupos[c].map(tarjetaDoc).join('')}</div></section>`).join('')}
+    </div>`;
+}
+function tarjetaDoc(d) {
+  const v = textoVisible(d);
+  return `<article class="doc">
+    <div class="card-top"><span class="tipo">${ico('file')}${esc(d.tipo)}</span><span class="badge" title="${esc(d.marca)}">${esc(MARCA_CORTA[d.marca] || d.marca)}</span></div>
+    <a class="doc-t" href="${esc(d.url)}" target="_blank" rel="noopener noreferrer">${esc(d.titulo)}</a>
+    ${d.descripcion ? `<p class="hint doc-desc">${esc(d.descripcion)}</p>` : ''}
+    <div class="card-foot">
+      <span class="vis">${ico(v.icono)}${esc(v.txt)}</span>
+      <span style="display:flex;gap:4px">
+        ${esAdmin() ? `<button class="btn btn-ghost btn-icon sm" data-doc-edit="${esc(d.id)}" aria-label="Editar ${esc(d.titulo)}">${ico('edit')}</button>` : ''}
+        <a class="btn btn-sec sm" href="${esc(d.url)}" target="_blank" rel="noopener noreferrer">Abrir ${ico('external')}</a>
+      </span>
+    </div>
+  </article>`;
+}
+function bindBiblioteca() {
+  const bq = $('#bq');
+  bq.oninput = () => { S.bib.q = bq.value; const pos = bq.selectionStart; repintarBib(); const n = $('#bq'); n.focus(); n.setSelectionRange(pos, pos); };
+  document.querySelectorAll('[data-marca]').forEach(b => b.onclick = () => { S.bib.marca = b.dataset.marca; repintarBib(); });
+  ['#btnDocNuevo', '#btnDocNuevo2'].forEach(s => { const b = $(s); if (b) b.onclick = () => abrirDoc(null); });
+  document.querySelectorAll('[data-doc-edit]').forEach(b => b.onclick = () => abrirDoc(b.dataset.docEdit));
+}
+function repintarBib() {
+  const syncEl = $('#sync'), s = syncEl ? syncEl.dataset.s : 'ok';
+  renderMain(); if (s !== 'ok') setSync(s);
+}
+
+/* Panel para agregar o editar un documento */
+function abrirDoc(id) {
+  const d = id ? S.docs.find(x => x.id === id) : null;
+  if (id && !d) return;
+  const v = d ? { ...d } : { titulo: '', url: '', marca: 'General', categoria: '', descripcion: '', visible: 'Todos' };
+  S.docEdit = { id: d ? d.id : null, version: d ? d.version : null, original: v };
+  cerrarCapas();
+  const todos = !v.visible || norm(v.visible) === 'todos';
+  const elegidos = todos ? [] : v.visible.split(',').map(x => x.trim());
+  const categorias = [...new Set(S.docs.map(x => x.categoria).filter(Boolean))].sort();
+  const wrap = document.createElement('div');
+  wrap.id = 'capa';
+  wrap.innerHTML = `
+  <div class="backdrop" data-close></div>
+  <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="dcT">
+    <div class="drawer-head"><h2 id="dcT">${d ? 'Editar documento' : 'Agregar documento'}</h2>
+      <button class="btn btn-ghost btn-icon" data-close aria-label="Cerrar">${ico('x')}</button></div>
+    <form class="drawer-body" id="dcForm" novalidate>
+      <div class="field"><label class="label" for="dcUrl">Enlace</label>
+        <input class="input" id="dcUrl" type="url" inputmode="url" value="${esc(v.url)}" placeholder="Pega el enlace de Google Sheets, Excel en línea…" spellcheck="false">
+        <span class="hint" id="dcTipo">${v.url ? 'Tipo: ' + esc(tipoDeEnlace(v.url)) : 'Acepta Google Sheets, Docs, Slides, Drive, Excel y Word en línea (OneDrive/SharePoint).'}</span></div>
+      <div class="field"><label class="label" for="dcTit">Título</label>
+        <input class="input" id="dcTit" value="${esc(v.titulo)}" maxlength="200" placeholder="Ej. Ventas Mercado Libre 2026"></div>
+      <div class="field"><span class="label">Marca</span>
+        <div class="seg" data-dseg="marca">${MARCAS.map(m => `<button type="button" data-val="${esc(m)}" aria-pressed="${v.marca === m}">${esc(m)}</button>`).join('')}</div></div>
+      <div class="field"><label class="label" for="dcCat">Categoría <span style="font-weight:400;color:var(--muted)">· opcional</span></label>
+        <input class="input" id="dcCat" list="dlCat" value="${esc(v.categoria)}" placeholder="Ej. Ventas, KPIs, Formatos">${lista('dlCat', categorias)}</div>
+      <div class="field"><label class="label" for="dcDesc">Descripción <span style="font-weight:400;color:var(--muted)">· opcional</span></label>
+        <textarea class="textarea" id="dcDesc" rows="2" style="min-height:64px" maxlength="1000">${esc(v.descripcion)}</textarea></div>
+      <div class="field"><span class="label">¿Quién lo puede ver?</span>
+        <div class="seg" data-dseg="vis">
+          <button type="button" data-val="todos" aria-pressed="${todos}">Todo el equipo</button>
+          <button type="button" data-val="elegir" aria-pressed="${!todos}">Elegir personas</button>
+        </div>
+        <div class="personas" id="dcPersonas" ${todos ? 'hidden' : ''}>
+          ${S.usuarios.map(u => {
+            const yo = u.usuario === S.user.usuario;
+            return `<label class="persona"><input type="checkbox" value="${esc(u.usuario)}" ${elegidos.includes(u.usuario) || yo ? 'checked' : ''} ${yo ? 'disabled' : ''}>
+              <span class="avatar">${esc(iniciales(u.nombre))}</span><span>${esc(u.nombre)}${yo ? ' <span class="hint">(tú, siempre)</span>' : ''}</span></label>`;
+          }).join('')}
+          <span class="hint">Si no marcas a nadie más, solo tú lo verás.</span>
+        </div>
+      </div>
+      <span class="err-text" id="dcErr" hidden></span>
+      ${d ? `<div class="meta"><span>Agregado por <b>${esc(d.creadoPor)}</b> · ${esc(d.creado)}</span><span>Último cambio por <b>${esc(d.modificadoPor)}</b> · ${esc(d.modificado)}</span></div>` : ''}
+    </form>
+    <div class="drawer-foot">
+      ${d ? '<button class="btn btn-danger" id="dcDel" type="button">Eliminar</button>' : ''}
+      <span class="spacer"></span>
+      <button class="btn btn-ghost" data-close type="button">Cancelar</button>
+      <button class="btn btn-primary" id="dcSave" type="button">${d ? 'Guardar cambios' : 'Agregar'}</button>
+    </div>
+  </aside>`;
+  document.body.appendChild(wrap);
+  wrap.querySelectorAll('[data-close]').forEach(b => b.onclick = () => { S.docEdit = null; cerrarCapas(); });
+  wrap.querySelectorAll('[data-dseg]').forEach(seg => seg.onclick = e => {
+    const b = e.target.closest('button'); if (!b) return;
+    seg.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    if (seg.dataset.dseg === 'vis') $('#dcPersonas').hidden = b.dataset.val === 'todos';
+  });
+  const url = $('#dcUrl');
+  url.oninput = () => { $('#dcTipo').textContent = url.value.trim() ? 'Tipo: ' + tipoDeEnlace(url.value.trim()) : ''; $('#dcErr').hidden = true; };
+  $('#dcSave').onclick = guardarDoc;
+  $('#dcForm').onsubmit = e => { e.preventDefault(); guardarDoc(); };
+  const del = $('#dcDel'); if (del) del.onclick = () => eliminarDoc(d);
+  setTimeout(() => { if (!d) url.focus(); }, 0);
+}
+function leerDoc() {
+  const seg = n => { const b = document.querySelector(`[data-dseg="${n}"] [aria-pressed="true"]`); return b ? b.dataset.val : ''; };
+  let visible = 'Todos';
+  if (seg('vis') === 'elegir') {
+    const marcados = [...document.querySelectorAll('#dcPersonas input:checked')].map(x => x.value);
+    visible = [...new Set(marcados.concat([S.user.usuario]))].join(',');
+  }
+  return { url: $('#dcUrl').value.trim(), titulo: $('#dcTit').value.trim(), marca: seg('marca') || 'General',
+           categoria: $('#dcCat').value.trim(), descripcion: $('#dcDesc').value.trim(), visible };
+}
+async function guardarDoc() {
+  const b = $('#dcSave'), err = $('#dcErr');
+  const d = leerDoc();
+  const falla = m => { err.textContent = m; err.hidden = false; };
+  if (!/^https?:\/\/\S+$/i.test(d.url)) return falla('Pega un enlace válido que empiece con https://');
+  if (!d.titulo) return falla('Escribe un título para identificar el documento.');
+  b.disabled = true; b.textContent = 'Guardando…';
+  const r = S.docEdit.id
+    ? await guardar(() => api('docActualizar', { id: S.docEdit.id, datos: d, version: S.docEdit.version }))
+    : await guardar(() => api('docCrear', { datos: d }));
+  if (r.ok) {
+    const i = S.docs.findIndex(x => x.id === r.documento.id);
+    if (i >= 0) S.docs[i] = r.documento; else S.docs.push(r.documento);
+    S.rev = r.rev || S.rev;
+    const nuevo = !S.docEdit.id;
+    S.docEdit = null; cerrarCapas(); repintarBib();
+    toast(nuevo ? 'Documento agregado' : r.sinCambios ? 'Sin cambios' : 'Documento actualizado');
+  } else {
+    b.disabled = false; b.textContent = S.docEdit.id ? 'Guardar cambios' : 'Agregar';
+    if (r.documento) { const i = S.docs.findIndex(x => x.id === r.documento.id); if (i >= 0) S.docs[i] = r.documento; }
+    falla(r.mensaje || 'No se pudo guardar.');
+  }
+}
+function eliminarDoc(d) {
+  abrirModal(`<div class="modal-box sm" role="alertdialog" aria-modal="true" aria-labelledby="ddt">
+    <div class="modal-head"><h2 id="ddt">¿Quitar este documento?</h2>
+      <p class="hint"><b>${esc(d.titulo)}</b><br>Solo se quita de la biblioteca; el archivo original no se borra.</p></div>
+    <div class="modal-foot"><button class="btn btn-ghost" data-close>Cancelar</button><button class="btn btn-primary" id="ddOk" style="background:#DC2626">Quitar</button></div></div>`, true);
+  $('#ddOk').onclick = async () => {
+    cerrarModal(); S.docEdit = null; cerrarCapas();
+    S.docs = S.docs.filter(x => x.id !== d.id); repintarBib();
+    const r = await guardar(() => api('docEliminar', { id: d.id }));
+    if (r.ok) { S.rev = r.rev || S.rev; toast('Documento quitado de la biblioteca'); }
+    else { S.docs.push(d); repintarBib(); if (r.mensaje) toast(r.mensaje, 'bad'); }
+  };
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -1180,10 +1439,10 @@ async function recargar() {
   try {
     const r = await api('bootstrap');
     if (!r.ok) return;
-    S.user = r.usuario; S.usuarios = r.usuarios; S.acts = r.actividades; S.rev = r.rev;
+    S.user = r.usuario; S.usuarios = r.usuarios; S.acts = r.actividades; S.docs = r.documentos || []; S.rev = r.rev;
     try { localStorage.setItem('nexo_user', JSON.stringify(r.usuario)); } catch (_) {}
     elegirSemana();
-    if (S.vista === 'tablero') repintarTablero();
+    if (S.vista === 'tablero') repintarTablero(); else if (S.vista === 'biblioteca') repintarBib();
   } catch (_) { setSync('error'); toast('No hay conexión con el servidor.', 'bad'); }
 }
 let sincronizando = false;
@@ -1193,8 +1452,9 @@ async function sincronizar() {
   try {
     const r = await api('poll', { rev: S.rev });
     if (r.ok && r.cambios) {
-      S.acts = r.actividades; S.rev = r.rev; elegirSemana();
+      S.acts = r.actividades; S.docs = r.documentos || S.docs; S.rev = r.rev; elegirSemana();
       if (S.vista === 'tablero') repintarTablero();
+      else if (S.vista === 'biblioteca' && !S.docEdit) repintarBib();
       if (S.edit && S.edit.clave) {
         const act = S.acts.find(a => a.clave === S.edit.clave);
         if (act && act.version !== S.edit.version && !editorSucio()) { S.edit = { clave: act.clave, original: { ...act }, version: act.version }; pintarEditor(act); }
@@ -1209,7 +1469,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) sinc
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     if ($('#modal')) { if ($('#modal').dataset.imp) cerrarImportar(); else cerrarModal(); }
-    else if ($('#capa')) cerrarEditor();
+    else if ($('#capa')) { if (S.docEdit) { S.docEdit = null; cerrarCapas(); } else cerrarEditor(); }
   }
   if (e.key === '/' && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName) && $('#q') && !$('#capa') && !$('#modal')) { e.preventDefault(); $('#q').focus(); }
 });
@@ -1219,7 +1479,7 @@ document.addEventListener('keydown', e => {
    Imita al servidor guardando en este navegador.
    ════════════════════════════════════════════════════════════ */
 const Demo = (() => {
-  const KEY = 'nexo_demo_v2';
+  const KEY = 'nexo_demo_v3';
   const USERS = [
     { usuario: 'admin', nombre: 'Arturo Gutiérrez', pin: '1234', rol: 'admin' },
     { usuario: 'julio', nombre: 'Julio Chávez', pin: '1111', rol: 'editor' },
@@ -1232,7 +1492,12 @@ const Demo = (() => {
     let orden = 0;
     const mk = (id, tarea, tipo, responsable, fecha, frecuencia, estado, pctAcum, observaciones, meta, prealineacion = '') =>
       ({ clave: clave(sem, id), semana: sem, id, tarea, tipo, prealineacion, responsable, fecha, frecuencia, estado, resultado: '', pctDiario: '0', pctAcum, observaciones, meta, orden: ++orden, creadoPor: 'Arturo Gutiérrez', creado: t, modificadoPor: 'Arturo Gutiérrez', modificado: t, version: 1 });
-    return { rev: 1, log: [], acts: [
+    return { rev: 1, log: [], ultimoReinicio: hoyISO(), docs: [
+      { id: 'DOC-0001', titulo: 'Ventas Mercado Libre', url: 'https://docs.google.com/spreadsheets/d/ejemplo/edit', tipo: 'Google Sheets', marca: 'General', categoria: 'Ventas', descripcion: 'Seguimiento diario de ventas y dashboard.', visible: 'Todos', creadoPor: 'Arturo Gutiérrez', creado: t, modificadoPor: 'Arturo Gutiérrez', modificado: t, version: 1 },
+      { id: 'DOC-0002', titulo: 'Manual de Atención', url: 'https://docs.google.com/document/d/ejemplo/edit', tipo: 'Google Docs', marca: 'General', categoria: 'Atención', descripcion: '', visible: 'admin,julio', creadoPor: 'Arturo Gutiérrez', creado: t, modificadoPor: 'Arturo Gutiérrez', modificado: t, version: 1 },
+      { id: 'DOC-0003', titulo: 'Calendario de contenido AFZ', url: 'https://onedrive.live.com/:x:/r/personal/ejemplo/calendario.xlsx', tipo: 'Excel en línea', marca: 'Afinazone', categoria: 'Contenido', descripcion: '', visible: 'admin,luis', creadoPor: 'Arturo Gutiérrez', creado: t, modificadoPor: 'Arturo Gutiérrez', modificado: t, version: 1 },
+      { id: 'DOC-0004', titulo: 'Formato estándar de KPIs', url: 'https://docs.google.com/spreadsheets/d/ejemplo2/edit', tipo: 'Google Sheets', marca: 'Omova Comercializadora', categoria: 'KPIs', descripcion: 'Archivo maestro.', visible: 'admin', creadoPor: 'Arturo Gutiérrez', creado: t, modificadoPor: 'Arturo Gutiérrez', modificado: t, version: 1 }
+    ], acts: [
       mk('MKT1', 'Reportar los pedidos a surtir del día con nota de venta para almacén y finanzas', 'Operativa', 'Julio Chávez', '', 'Diaria', 'En proceso', '0', 'Diario, antes del corte de venta directa de 2:00 p.m.', '100%'),
       mk('MKT2', 'Registrar las ventas y cierres del día en los formatos', 'Operativa', 'Julio Chávez', '', 'Diaria', 'En proceso', '0', 'Alimenta el reporte de facturación.', '100% de ventas registradas'),
       mk('MKT6', 'Aportar tiempos de respuesta AFZ', 'Operativa', 'Julio Chávez', d(3), 'Semanal', 'Programado', '0', 'Cada viernes.', ''),
@@ -1249,6 +1514,34 @@ const Demo = (() => {
   const difs = (a, d) => CAMPOS_EDIT.filter(k => String(a[k] ?? '') !== String(d[k] ?? '')).map(k => ({ campo: k, antes: a[k] || '', despues: d[k] || '' }));
   const sigId = ids => ID_PREFIJO + (ids.reduce((m, id) => { const x = String(id).match(new RegExp('^' + ID_PREFIJO + '(\\d+)$', 'i')); return x ? Math.max(m, +x[1]) : m; }, 0) + 1);
   const maxOrden = (db, sem) => db.acts.filter(a => a.semana === sem).reduce((m, a) => Math.max(m, a.orden), 0);
+  const verDoc = (d, u) => u.rol === 'admin' || d.creadoPor === u.nombre || norm(d.visible) === 'todos' || d.visible.split(',').map(x => x.trim()).includes(u.usuario);
+  function limpiarDoc(d) {
+    const s = (v, max) => String(v ?? '').trim().slice(0, max);
+    const o = { titulo: s(d.titulo, 200), url: s(d.url, 2000), marca: canon(d.marca, MARCAS) || 'General', categoria: s(d.categoria, 80), descripcion: s(d.descripcion, 1000) };
+    if (!o.titulo) return { error: 'VALIDACION', mensaje: 'Falta el título del documento.' };
+    if (!/^https?:\/\/\S+$/i.test(o.url)) return { error: 'VALIDACION', mensaje: 'El enlace debe empezar con https://' };
+    o.tipo = tipoDeEnlace(o.url);
+    const vis = String(d.visible || 'Todos').split(',').map(x => x.trim().toLowerCase()).filter(x => x && (x === 'todos' || USERS.some(u => u.usuario === x)));
+    o.visible = !vis.length || vis.includes('todos') ? 'Todos' : vis.join(',');
+    return o;
+  }
+  /* Simula el activador nocturno: si ya pasó la hora de reinicio y hoy no se ha hecho, se hace. */
+  function reinicio(db) {
+    const ahora = new Date();
+    if (ahora.getHours() < HORA_REINICIO || db.ultimoReinicio === hoyISO()) return;
+    db.ultimoReinicio = hoyISO();
+    const sems = db.acts.map(a => a.semana); if (!sems.length) return;
+    const sem = sems.includes(semanaISO()) ? semanaISO() : Math.max(...sems);
+    const t = ahoraTxt(), quien = 'Sistema (reinicio diario)';
+    let n = 0;
+    db.acts.forEach(a => {
+      if (a.semana !== sem || norm(a.frecuencia) !== 'diaria' || !['En revisión', 'Terminado'].includes(a.estado)) return;
+      log(db, [[t, quien, 'Reinició', a.clave, a.tarea, 'Estatus', a.estado, 'En proceso']]);
+      Object.assign(a, { estado: 'En proceso', pctDiario: '50', modificadoPor: quien, modificado: t, version: a.version + 1 }); n++;
+    });
+    if (n) db.rev++;
+    salvar(db);
+  }
   const log = (db, filas) => filas.forEach(f => db.log.push({ fecha: f[0], usuario: f[1], accion: f[2], clave: f[3], tarea: f[4], campo: f[5], antes: f[6], despues: f[7] }));
 
   async function handle(req) {
@@ -1263,8 +1556,35 @@ const Demo = (() => {
     const ahora = ahoraTxt();
     switch (req.action) {
       case 'logout': return { ok: true };
-      case 'bootstrap': return { ok: true, usuario: pub(u), usuarios: USERS.map(pub), actividades: db.acts.map(a => ({ ...a })), rev: db.rev };
-      case 'poll': return { ok: true, cambios: false, rev: db.rev };
+      case 'bootstrap': reinicio(db); return { ok: true, usuario: pub(u), usuarios: USERS.map(pub), actividades: db.acts.map(a => ({ ...a })), documentos: db.docs.filter(d => verDoc(d, u)).map(d => ({ ...d })), rev: db.rev };
+      case 'poll': {
+        reinicio(db);
+        if (Number(req.rev) === db.rev) return { ok: true, cambios: false, rev: db.rev };
+        return { ok: true, cambios: true, rev: db.rev, autores: [], actividades: db.acts.map(a => ({ ...a })), documentos: db.docs.filter(d => verDoc(d, u)).map(d => ({ ...d })) };
+      }
+      case 'docCrear': case 'docActualizar': case 'docEliminar': {
+        if (u.rol !== 'admin') return { ok: false, error: 'PERMISO', mensaje: 'Solo el administrador puede hacer esto.' };
+        if (req.action === 'docEliminar') {
+          const a = db.docs.find(x => x.id === req.id);
+          if (a) { db.docs = db.docs.filter(x => x !== a); db.rev++; log(db, [[ahora, u.nombre, 'Eliminó documento', a.id, a.titulo, '', a.url, '']]); salvar(db); }
+          return { ok: true, rev: db.rev };
+        }
+        const prev = req.action === 'docActualizar' ? db.docs.find(x => x.id === req.id) : null;
+        if (req.action === 'docActualizar' && !prev) return { ok: false, error: 'NOEXISTE', mensaje: 'Este documento ya no existe.' };
+        const d = limpiarDoc({ ...(prev || {}), ...req.datos }); if (d.error) return { ok: false, ...d };
+        if (prev) {
+          const NOM = { titulo: 'Título', url: 'Enlace', marca: 'Marca', categoria: 'Categoría', descripcion: 'Descripción', visible: 'Visible para' };
+          const c = Object.keys(NOM).filter(k => String(prev[k]) !== String(d[k]));
+          if (!c.length) return { ok: true, documento: { ...prev }, sinCambios: true, rev: db.rev };
+          log(db, c.map(k => [ahora, u.nombre, 'Editó documento', prev.id, d.titulo, NOM[k], prev[k], d[k]]));
+          Object.assign(prev, d, { modificadoPor: u.nombre, modificado: ahora, version: prev.version + 1 });
+          db.rev++; salvar(db); return { ok: true, documento: { ...prev }, rev: db.rev };
+        }
+        const n = db.docs.reduce((m, x) => { const k = String(x.id).match(/^DOC-(\d+)$/); return k ? Math.max(m, +k[1]) : m; }, 0) + 1;
+        const o = { ...d, id: 'DOC-' + String(n).padStart(4, '0'), creadoPor: u.nombre, creado: ahora, modificadoPor: u.nombre, modificado: ahora, version: 1 };
+        db.docs.push(o); db.rev++; log(db, [[ahora, u.nombre, 'Agregó documento', o.id, o.titulo, '', '', '']]); salvar(db);
+        return { ok: true, documento: { ...o }, rev: db.rev };
+      }
       case 'historial': {
         let l = db.log.slice().reverse();
         if (req.clave) l = l.filter(x => x.clave === req.clave);
@@ -1283,7 +1603,9 @@ const Demo = (() => {
         const a = db.acts.find(x => x.clave === req.clave);
         if (!a) return { ok: false, error: 'NOEXISTE', mensaje: 'Esta tarea ya no existe.' };
         if (req.version && req.version !== a.version) return { ok: false, error: 'CONFLICTO', actividad: { ...a }, mensaje: `${a.modificadoPor} cambió esta tarea mientras la editabas.` };
-        const d = limpiar({ ...a, ...req.datos, id: a.id, semana: a.semana }); if (d.error) return { ok: false, ...d };
+        const datos = { ...req.datos };
+        if (datos.estado && datos.estado !== a.estado && datos.pctDiario === undefined) Object.assign(datos, pctPorEstado(a, datos.estado));
+        const d = limpiar({ ...a, ...datos, id: a.id, semana: a.semana }); if (d.error) return { ok: false, ...d };
         const c = difs(a, d);
         if (!c.length) return { ok: true, actividad: { ...a }, sinCambios: true, rev: db.rev };
         Object.assign(a, d, { clave: a.clave, modificadoPor: u.nombre, modificado: ahora, version: a.version + 1 });
@@ -1296,6 +1618,7 @@ const Demo = (() => {
         return { ok: true, rev: db.rev };
       }
       case 'importar': {
+        if (u.rol !== 'admin') return { ok: false, error: 'PERMISO', mensaje: 'Solo el administrador puede importar.' };
         let nuevas = 0, actualizadas = 0, sinCambio = 0, sucio = false; const errores = [];
         const pos = {}, enPegado = {};
         req.filas.forEach((f, i) => {
