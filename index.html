@@ -311,6 +311,57 @@ a.btn{text-decoration:none}
   .docs{grid-template-columns:1fr}
 }
 
+/* ── Hoy y subtareas ─────────────────────────────────────── */
+.card-top-r{display:flex;align-items:center;gap:6px;min-width:0}
+.hoy-grp{display:inline-flex;align-items:center;gap:4px;flex:none}
+.avatar.xs{width:20px;height:20px;font-size:9px}
+.hoy-grp .avatar.xs{background:var(--warn-bg);border-color:var(--warn-bd);color:var(--warn-tx)}
+.hoy-btn{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 6px;border-radius:999px;border:1px solid transparent;color:var(--placeholder);font-size:var(--fs-label);font-weight:600;transition:background .15s,color .15s}
+.hoy-btn svg{width:16px;height:16px;flex:none}
+.hoy-btn span{display:none}
+.hoy-btn:hover{background:var(--warn-bg);color:var(--warn-tx)}
+.hoy-btn[aria-pressed=true]{background:var(--warn-bg);border-color:var(--warn-bd);color:var(--warn-tx)}
+.hoy-btn[aria-pressed=true] span,.hoy-btn.con-txt span{display:inline}
+.hoy-btn.con-txt{border-color:var(--border);color:var(--text-2);height:32px;padding:0 10px}
+.hoy-btn.con-txt[aria-pressed=true]{border-color:var(--warn-bd);color:var(--warn-tx)}
+.hoy-btn:focus-visible{outline:none;box-shadow:0 0 0 3px var(--focus)}
+.card.en-hoy{border-color:var(--warn-bd);box-shadow:inset 3px 0 0 var(--warn),var(--sh1)}
+.chip-toggle.hoy-chip[aria-pressed=true]{background:var(--warn-bg);border-color:var(--warn-bd);color:var(--warn-tx)}
+.chip-toggle.hoy-chip .count{background:var(--warn)}
+.subs{border-top:1px solid var(--subtle);margin:0 -14px -14px;padding:4px 8px 8px}
+.subs-toggle{display:flex;align-items:center;gap:6px;width:100%;padding:4px 6px;border-radius:6px;font-size:var(--fs-label);font-weight:600;color:var(--text-2);text-align:left}
+.subs-toggle:hover{background:var(--canvas)}
+.subs-toggle>svg{width:14px;height:14px;flex:none;transition:transform .15s}
+.subs-toggle[aria-expanded=true]>svg{transform:rotate(90deg)}
+.subs-toggle .n{color:var(--muted);font-weight:500}
+.subs-toggle .sol{margin-left:auto;color:var(--warn);display:inline-flex}
+.subs-toggle .sol svg{width:14px;height:14px}
+.sub-list{list-style:none;display:flex;flex-direction:column;gap:2px;margin-top:2px}
+.sub{display:flex;align-items:center;gap:6px;padding:2px 4px 2px 6px;border-radius:6px;min-height:32px}
+.sub:hover{background:var(--canvas)}
+.sub.en-hoy{background:var(--warn-bg)}
+.sub-check{flex:1;min-width:0;display:flex;align-items:flex-start;gap:8px;cursor:pointer;line-height:1.4;padding:4px 0}
+.sub-check input{width:16px;height:16px;margin-top:1px;accent-color:var(--primary);flex:none;cursor:pointer}
+.sub-t{word-break:break-word}
+.sub.done .sub-t,.sub.done .sub-txt{color:var(--muted);text-decoration:line-through}
+.sub-add{width:100%;height:32px;border:1px dashed var(--border);border-radius:6px;padding:0 8px;margin-top:4px;background:transparent;font-size:var(--fs-label)}
+.sub-add::placeholder{color:var(--placeholder)}
+.sub-add:focus{outline:none;border-style:solid;border-color:var(--primary);background:var(--surface);box-shadow:0 0 0 3px var(--focus)}
+.sub-ed{display:flex;flex-direction:column;gap:2px;border:1px solid var(--border);border-radius:var(--r);padding:6px}
+.sub-ed .sub-check{flex:none;padding:0}
+.sub-txt{flex:1;min-width:0;height:32px;border:1px solid transparent;border-radius:6px;padding:0 8px;background:transparent}
+.sub-txt:hover{border-color:var(--border)}
+.sub-txt:focus{outline:none;border-color:var(--primary);background:var(--surface);box-shadow:0 0 0 3px var(--focus)}
+.sub-resp{height:32px;width:auto;max-width:132px;font-size:var(--fs-label);padding:0 28px 0 8px;background-position:right 8px center}
+.sub-del{width:28px;height:28px;border-radius:6px;color:var(--placeholder);display:inline-flex;align-items:center;justify-content:center;flex:none}
+.sub-del:hover{background:var(--bad-bg);color:var(--bad-tx)}
+.sub-del svg{width:14px;height:14px}
+.sub-ed .sub-add{margin-top:2px}
+@media (max-width:767px){
+  .hoy-btn{height:28px;padding:0 8px}
+  .sub-resp{max-width:96px}
+}
+
 /* ── Conversaciones ──────────────────────────────────────── */
 .nav-item{position:relative}
 .nav-count{position:absolute;top:2px;right:8px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--primary);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid var(--surface)}
@@ -503,7 +554,8 @@ const I = {
   trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
   archive: '<rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11h14V8M10 12h4"/>',
   video: '<rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3"/>',
-  tag: '<path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9z"/><circle cx="8" cy="8" r="1.5"/>'
+  tag: '<path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9z"/><circle cx="8" cy="8" r="1.5"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'
 };
 const ico = n => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]}</svg>`;
 
@@ -604,7 +656,8 @@ function conservarVacios(previa, nueva) {
 const S = {
   token: null, user: null, usuarios: [], acts: [], rev: 0, semana: null,
   vista: 'tablero', colMovil: ESTADOS[1], verFiltros: false,
-  f: { q: '', resp: '', tipo: '', frec: '', mias: false },
+  f: { q: '', resp: '', tipo: '', frec: '', mias: false, hoy: false },
+  subs: [], hoy: [], hoyFecha: '', subBorrador: {},
   docs: [], bib: { q: '', marca: '' }, docEdit: null,
   edit: null, imp: null, hist: { registros: [], usuario: '', q: '', cargando: false },
   pendientes: 0,
@@ -615,6 +668,7 @@ function chatVacio() {
            enviando: 0, cargando: false, trays: {}, borrador: {}, editar: null, pegadoAbajo: true };
 }
 S.chat = chatVacio();
+S.abiertas = new Set((() => { try { return JSON.parse(localStorage.getItem('nexo_subs_abiertas') || '[]'); } catch (_) { return []; } })());
 try { S.token = localStorage.getItem('nexo_token'); S.user = JSON.parse(localStorage.getItem('nexo_user') || 'null'); } catch (e) {}
 
 /* ── Conexión con el servidor ────────────────────────────── */
@@ -732,7 +786,8 @@ function bindLogin() {
 async function salir() { try { await api('logout'); } catch (_) {} salirLocal(); }
 function salirLocal() {
   S.token = null; S.user = null; S.acts = []; S.docs = []; S.edit = null; S.imp = null; S.docEdit = null; S.semana = null; S.vista = 'tablero'; S.miasInicial = false;
-  S.f = { q: '', resp: '', tipo: '', frec: '', mias: false };
+  S.f = { q: '', resp: '', tipo: '', frec: '', mias: false, hoy: false };
+  S.subs = []; S.hoy = []; S.hoyFecha = ''; S.subBorrador = {};
   Object.values(S.chat.trays).flat().forEach(t => { if (t.preview) URL.revokeObjectURL(t.preview); });
   S.chat = chatVacio(); document.title = 'NEXO Workspace';
   try { localStorage.removeItem('nexo_token'); localStorage.removeItem('nexo_user'); } catch (_) {}
@@ -750,7 +805,8 @@ function filtradas() {
     (!S.f.resp || a.responsable === S.f.resp) &&
     (!S.f.tipo || a.tipo === S.f.tipo) &&
     (!S.f.frec || (a.frecuencia || 'Sin frecuencia') === S.f.frec) &&
-    (!S.f.mias || esMia(a))
+    (!S.f.mias || esMia(a)) &&
+    (!S.f.hoy || tocaHoy(a))
   );
 }
 const filtrosActivos = () => (S.f.resp ? 1 : 0) + (S.f.tipo ? 1 : 0) + (S.f.frec ? 1 : 0);
@@ -764,6 +820,7 @@ function vistaTablero() {
   const nf = filtrosActivos();
   const porEstado = e => lista.filter(a => a.estado === e).sort((a, b) => a.orden - b.orden);
   const sems = semanas();
+  const nHoy = deSemana().filter(tocaHoy).length;
   return `
     <header class="topbar">
       <div>
@@ -784,6 +841,7 @@ function vistaTablero() {
       <label class="search"><span class="sr">Buscar</span>${ico('search')}
         <input class="input" id="q" placeholder="Buscar tarea, ID o responsable" value="${esc(S.f.q)}"><span class="kbd">/</span></label>
       <button class="chip-toggle" id="btnMias" aria-pressed="${S.f.mias}" title="Solo mis tareas">${ico('user')}<span class="lbl">Solo mías</span></button>
+      <button class="chip-toggle hoy-chip" id="btnHoy" aria-pressed="${S.f.hoy}" title="Solo en lo que trabajo hoy">${ico('sun')}<span class="lbl">Hoy</span>${nHoy ? `<span class="count">${nHoy}</span>` : ''}</button>
       <button class="chip-toggle" id="btnFiltros" aria-pressed="${S.verFiltros || nf > 0}" aria-expanded="${S.verFiltros}" title="Filtros">${ico('filter')}<span class="lbl">Filtros</span>${nf ? `<span class="count">${nf}</span>` : ''}</button>
       <span class="spacer"></span>
       ${puedeEditar() ? `<button class="btn btn-sec" id="btnNueva" title="Nueva tarea">${ico('plus')}<span class="lbl">Nueva</span></button>` : ''}
@@ -812,7 +870,7 @@ function vistaTablero() {
           const cs = porEstado(e);
           return `<section class="col ${S.colMovil === e ? 'active' : ''}" data-col="${e}" aria-label="${e}">
             <div class="col-head"><i class="dot" data-e="${e}"></i>${e}<span class="badge">${cs.length}</span></div>
-            <div class="cards">${cs.length ? cs.map(tarjeta).join('') : `<div class="empty-col">${S.f.q || nf || S.f.mias ? 'Nada con estos filtros' : 'Sin tareas'}</div>`}</div>
+            <div class="cards">${cs.length ? cs.map(tarjeta).join('') : `<div class="empty-col">${S.f.hoy && !S.f.q && !nf ? 'Nada marcado para hoy aquí' : S.f.q || nf || S.f.mias || S.f.hoy ? 'Nada con estos filtros' : 'Sin tareas'}</div>`}</div>
           </section>`;
         }).join('')}
       </div>`}
@@ -823,14 +881,15 @@ function tarjeta(a) {
   const late = vencida(a);
   const etiqueta = a.frecuencia || a.tipo;
   const pct = Number(a.pctAcum || 0);
-  return `<div class="card ${a.estado === 'Terminado' ? 'done' : ''}" role="button" tabindex="0" data-clave="${esc(a.clave)}" draggable="${puedeEditar()}">
-    <div class="card-top"><span class="mono">${esc(a.id)}</span>${etiqueta ? `<span class="badge">${esc(etiqueta)}</span>` : ''}</div>
+  return `<div class="card ${a.estado === 'Terminado' ? 'done' : ''} ${tocaHoy(a) ? 'en-hoy' : ''}" role="button" tabindex="0" data-clave="${esc(a.clave)}" draggable="${puedeEditar()}">
+    <div class="card-top"><span class="mono">${esc(a.id)}</span><span class="card-top-r">${botonHoy('tarea', a.clave)}${etiqueta ? `<span class="badge">${esc(etiqueta)}</span>` : ''}</span></div>
     <div class="card-title">${esc(a.tarea)}</div>
     ${pct > 0 ? `<div class="progress"><span class="progress-bar"><i style="width:${Math.min(pct, 100)}%"></i></span>${esc(pctTxt(a.pctAcum))}</div>` : ''}
     <div class="card-foot">
       <span class="who">${a.responsable ? `<span class="avatar">${esc(iniciales(a.responsable))}</span><span>${esc(a.responsable)}</span>` : '<span>Sin responsable</span>'}</span>
       ${a.fecha ? `<span class="due ${late ? 'late' : ''}">${ico('cal')}${late ? 'Vencida · ' : ''}${fechaCorta(a.fecha)}</span>` : ''}
     </div>
+    ${bloqueSubs(a)}
   </div>`;
 }
 
@@ -839,6 +898,7 @@ function bindTablero() {
   q.oninput = () => { S.f.q = q.value; repintarTablero(); };
   $('#semSel').onchange = e => { S.semana = Number(e.target.value); repintarTablero(); };
   $('#btnMias').onclick = () => { S.f.mias = !S.f.mias; repintarTablero(); };
+  $('#btnHoy').onclick = () => { S.f.hoy = !S.f.hoy; repintarTablero(); };
   $('#btnFiltros').onclick = () => { S.verFiltros = !S.verFiltros; repintarTablero(); };
   [['#fResp', 'resp'], ['#fTipo', 'tipo'], ['#fFrec', 'frec']].forEach(([sel, k]) => { const el = $(sel); if (el) el.onchange = () => { S.f[k] = el.value; repintarTablero(); }; });
   const lim = $('#btnLimpiar'); if (lim) lim.onclick = () => { S.f.resp = ''; S.f.tipo = ''; S.f.frec = ''; repintarTablero(); };
@@ -848,8 +908,20 @@ function bindTablero() {
   document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { S.colMovil = b.dataset.tab; repintarTablero(); });
 
   const board = $('#board'); if (!board) return;
-  board.onclick = e => { const c = e.target.closest('.card'); if (c) abrirEditor(c.dataset.clave); };
-  board.onkeydown = e => { const c = e.target.closest('.card'); if (c && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); abrirEditor(c.dataset.clave); } };
+  board.onclick = e => {
+    const h = e.target.closest('[data-hoy]'); if (h) { e.stopPropagation(); alternarHoy(h.dataset.hoy); return; }
+    const t = e.target.closest('[data-toggle-subs]'); if (t) { alternarSubs(t.dataset.toggleSubs); return; }
+    if (e.target.closest('.subs')) return; // dentro de las subtareas no se abre el panel
+    const c = e.target.closest('.card'); if (c) abrirEditor(c.dataset.clave);
+  };
+  board.onchange = e => { const x = e.target.closest('[data-sub-hecha]'); if (x) marcarSubHecha(x.dataset.subHecha, x.checked); };
+  board.oninput = e => { const x = e.target.closest('[data-sub-add]'); if (x) S.subBorrador[x.dataset.subAdd] = x.value; };
+  board.onkeydown = e => {
+    const x = e.target.closest('[data-sub-add]');
+    if (x) { if (e.key === 'Enter') { e.preventDefault(); crearSub(x.dataset.subAdd, x); } else if (e.key === 'Escape') x.blur(); return; }
+    const c = e.target.closest('.card');
+    if (c && e.target === c && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); abrirEditor(c.dataset.clave); }
+  };
   board.addEventListener('dragstart', e => { const c = e.target.closest('.card'); if (!c) return; e.dataTransfer.setData('text/plain', c.dataset.clave); e.dataTransfer.effectAllowed = 'move'; c.classList.add('dragging'); });
   board.addEventListener('dragend', e => { const c = e.target.closest('.card'); if (c) c.classList.remove('dragging'); board.querySelectorAll('.col.drop').forEach(x => x.classList.remove('drop')); });
   board.querySelectorAll('.col').forEach(col => {
@@ -860,11 +932,11 @@ function bindTablero() {
 }
 function repintarTablero() {
   const enfocado = document.activeElement && document.activeElement.id;
-  const pos = enfocado === 'q' ? $('#q').selectionStart : null;
+  const pos = enfocado === 'q' || (enfocado || '').startsWith('sa_') ? document.activeElement.selectionStart : null;
   const syncEl = $('#sync'), syncS = syncEl ? syncEl.dataset.s : 'ok';
   renderMain();
   if (syncS !== 'ok') setSync(syncS);
-  if (enfocado && $('#' + enfocado)) { const el = $('#' + enfocado); el.focus(); if (pos != null) el.setSelectionRange(pos, pos); }
+  if (enfocado && document.getElementById(enfocado)) { const el = document.getElementById(enfocado); el.focus(); if (pos != null) el.setSelectionRange(pos, pos); }
 }
 async function mover(k, estado) {
   const a = S.acts.find(x => x.clave === k);
@@ -887,6 +959,149 @@ function marcarTarjeta(k, cls) {
 }
 const reemplazar = act => { const i = S.acts.findIndex(x => x.clave === act.clave); if (i >= 0) S.acts[i] = act; else S.acts.push(act); };
 const quitar = k => { S.acts = S.acts.filter(x => x.clave !== k); };
+
+/* ── «Hoy» y subtareas ───────────────────────────────────────
+   Hoy: cada quien marca en qué trabaja hoy (tarea o subtarea), sin importar el estatus.
+   Las marcas son por persona y por día; al día siguiente empiezan de cero.
+   Subtareas: actividades pequeñas dentro de una tarea. No se exportan a Excel. */
+const subsDe = k => S.subs.filter(s => s.clave === k).sort((a, b) => a.orden - b.orden);
+const marcasDe = (tipo, ref) => S.hoy.filter(h => h.tipo === tipo && h.ref === ref);
+const miHoy = (tipo, ref) => S.hoy.some(h => h.tipo === tipo && h.ref === ref && h.usuario === S.user.usuario);
+const tocaHoy = a => miHoy('tarea', a.clave) || subsDe(a.clave).some(s => miHoy('sub', s.id));
+const guardarAbiertas = () => { try { localStorage.setItem('nexo_subs_abiertas', JSON.stringify([...S.abiertas].slice(-200))); } catch (_) {} };
+
+function botonHoy(tipo, ref, conTxt) {
+  const marcas = marcasDe(tipo, ref);
+  const mio = marcas.some(m => m.usuario === S.user.usuario);
+  const otros = marcas.filter(m => m.usuario !== S.user.usuario)
+    .map(m => `<span class="avatar xs" title="${esc(nombreDe(m.usuario))} trabaja en esto hoy">${esc(iniciales(nombreDe(m.usuario)))}</span>`).join('');
+  const txt = mio ? 'Quitar de mi día' : 'Trabajo en esto hoy';
+  const btn = puedeEditar()
+    ? `<button type="button" class="hoy-btn ${conTxt ? 'con-txt' : ''}" data-hoy="${tipo}|${esc(ref)}" aria-pressed="${mio}" title="${txt}" aria-label="${txt}">${ico('sun')}<span>Hoy</span></button>` : '';
+  return otros || btn ? `<span class="hoy-grp">${otros}${btn}</span>` : '';
+}
+
+function bloqueSubs(a) {
+  const subs = subsDe(a.clave);
+  if (!subs.length) return '';
+  const hechas = subs.filter(s => s.hecha).length;
+  const misHoy = subs.some(s => miHoy('sub', s.id));
+  const abierta = S.abiertas.has(a.clave) || (S.f.hoy && misHoy);
+  const ro = !puedeEditar();
+  return `<div class="subs">
+    <button type="button" class="subs-toggle" data-toggle-subs="${esc(a.clave)}" aria-expanded="${abierta}">${ico('chevron')}Subtareas <span class="n">${hechas}/${subs.length}</span>${misHoy && !abierta ? `<span class="sol" title="Tienes subtareas marcadas para hoy">${ico('sun')}</span>` : ''}</button>
+    ${abierta ? `<ul class="sub-list">${subs.map(s => `<li class="sub ${s.hecha ? 'done' : ''} ${miHoy('sub', s.id) ? 'en-hoy' : ''}">
+        <label class="sub-check"><input type="checkbox" data-sub-hecha="${esc(s.id)}" ${s.hecha ? 'checked' : ''} ${ro || s.tmp ? 'disabled' : ''}><span class="sub-t">${esc(s.texto)}</span></label>
+        ${s.responsable ? `<span class="avatar xs" title="${esc(s.responsable)}">${esc(iniciales(s.responsable))}</span>` : ''}
+        ${s.tmp ? '' : botonHoy('sub', s.id)}
+      </li>`).join('')}</ul>
+      ${ro ? '' : `<input class="sub-add" id="sa_${esc(a.clave)}" data-sub-add="${esc(a.clave)}" placeholder="+ Agregar subtarea" maxlength="300" value="${esc(S.subBorrador[a.clave] || '')}" draggable="false">`}` : ''}
+  </div>`;
+}
+function alternarSubs(k) {
+  if (S.abiertas.has(k)) S.abiertas.delete(k); else S.abiertas.add(k);
+  guardarAbiertas(); repintarTablero();
+}
+function pintarSubs() { if (S.vista === 'tablero') repintarTablero(); refrescarPanelSubs(); }
+
+async function alternarHoy(dato) {
+  if (!puedeEditar()) return;
+  const i = dato.indexOf('|'), tipo = dato.slice(0, i), ref = dato.slice(i + 1);
+  const mio = miHoy(tipo, ref), antes = S.hoy.slice();
+  S.hoy = mio ? S.hoy.filter(h => !(h.tipo === tipo && h.ref === ref && h.usuario === S.user.usuario))
+              : S.hoy.concat([{ usuario: S.user.usuario, tipo, ref }]);
+  pintarSubs();
+  const r = await guardar(() => api('hoyMarcar', { tipo, ref, valor: !mio }));
+  if (r.ok) S.hoy = r.hoy;
+  else { S.hoy = antes; if (r.mensaje) toast(r.mensaje, 'bad'); }
+  pintarSubs();
+}
+
+async function crearSub(clave, input) {
+  const texto = input.value.trim(); if (!texto) return;
+  const enPanel = input.id === 'subEdAdd';
+  input.value = ''; S.subBorrador[clave] = '';
+  const tmp = { id: 'tmp' + Date.now().toString(36), clave, texto, hecha: false, responsable: '', orden: 1e9, version: 1, tmp: true };
+  S.subs.push(tmp); S.abiertas.add(clave); guardarAbiertas();
+  pintarSubs();
+  const foco = enPanel ? $('#subEdAdd') : document.getElementById('sa_' + clave); if (foco) foco.focus();
+  const r = await guardar(() => api('subCrear', { datos: { clave, texto } }));
+  S.subs = S.subs.filter(x => x !== tmp);
+  if (r.ok) S.subs.push(r.subtarea);
+  else toast(r.mensaje || 'No se guardó la subtarea.', 'bad');
+  pintarSubs();
+}
+async function actualizarSub(id, datos, version) {
+  const s = S.subs.find(x => x.id === id); if (!s || s.tmp) return;
+  const antes = { ...s };
+  Object.assign(s, datos); pintarSubs();
+  const r = await guardar(() => api('subActualizar', { id, datos, version }));
+  if (r.ok) Object.assign(s, r.subtarea);
+  else {
+    if (r.subtarea) Object.assign(s, r.subtarea);
+    else if (r.error === 'NOEXISTE') S.subs = S.subs.filter(x => x.id !== id);
+    else Object.assign(s, antes);
+    if (r.mensaje) toast(r.mensaje, 'bad');
+  }
+  pintarSubs();
+}
+const marcarSubHecha = (id, v) => actualizarSub(id, { hecha: v });
+function guardarTextoSub(input) {
+  const row = input.closest('[data-sub]'); if (!row) return;
+  const s = S.subs.find(x => x.id === row.dataset.sub); if (!s) return;
+  const t = input.value.replace(/\s+/g, ' ').trim();
+  if (!t) { input.value = s.texto; return; }
+  if (t !== s.texto) actualizarSub(s.id, { texto: t }, s.version);
+}
+async function eliminarSub(id) {
+  const s = S.subs.find(x => x.id === id); if (!s || s.tmp) return;
+  S.subs = S.subs.filter(x => x !== s); pintarSubs();
+  const r = await guardar(() => api('subEliminar', { id }));
+  if (r.ok) toast('Subtarea eliminada');
+  else { S.subs.push(s); pintarSubs(); if (r.mensaje) toast(r.mensaje, 'bad'); }
+}
+
+/* Subtareas dentro del panel de la tarea */
+function htmlSubsEditor(clave) {
+  const subs = subsDe(clave), ro = !puedeEditar();
+  const opciones = sel => '<option value="">Sin responsable</option>' +
+    S.usuarios.map(u => `<option ${u.nombre === sel ? 'selected' : ''}>${esc(u.nombre)}</option>`).join('') +
+    (sel && !S.usuarios.some(u => u.nombre === sel) ? `<option selected>${esc(sel)}</option>` : '');
+  return (subs.length ? subs.map(s => `<div class="sub ${s.hecha ? 'done' : ''} ${miHoy('sub', s.id) ? 'en-hoy' : ''}" data-sub="${esc(s.id)}">
+      <label class="sub-check"><input type="checkbox" data-ed-hecha ${s.hecha ? 'checked' : ''} ${ro || s.tmp ? 'disabled' : ''} aria-label="Marcar como hecha"></label>
+      <input class="sub-txt" data-ed-txt value="${esc(s.texto)}" maxlength="300" ${ro || s.tmp ? 'disabled' : ''} aria-label="Subtarea">
+      <select class="select sub-resp" data-ed-resp ${ro || s.tmp ? 'disabled' : ''} aria-label="Responsable">${opciones(s.responsable)}</select>
+      ${s.tmp ? '' : botonHoy('sub', s.id)}
+      ${ro || s.tmp ? '' : `<button type="button" class="sub-del" data-ed-del aria-label="Eliminar subtarea" title="Eliminar">${ico('x')}</button>`}
+    </div>`).join('') : '<span class="hint" style="padding:4px 6px">Aún no hay subtareas. Divide la tarea en pasos pequeños.</span>')
+    + (ro ? '' : '<input class="sub-add" id="subEdAdd" placeholder="+ Agregar subtarea y presiona Enter" maxlength="300">');
+}
+function bindSubsEditor(clave) {
+  const box = $('#subEd'); if (!box) return;
+  box.onchange = e => {
+    const row = e.target.closest('[data-sub]'); if (!row) return;
+    if (e.target.matches('[data-ed-hecha]')) marcarSubHecha(row.dataset.sub, e.target.checked);
+    else if (e.target.matches('[data-ed-resp]')) actualizarSub(row.dataset.sub, { responsable: e.target.value });
+  };
+  box.addEventListener('focusout', e => { if (e.target.matches('[data-ed-txt]')) guardarTextoSub(e.target); });
+  box.onkeydown = e => {
+    if (e.key !== 'Enter') return;
+    if (e.target.matches('[data-ed-txt]')) { e.preventDefault(); e.target.blur(); }
+    else if (e.target.id === 'subEdAdd') { e.preventDefault(); crearSub(clave, e.target); }
+  };
+  box.onclick = e => { const d = e.target.closest('[data-ed-del]'); if (d) eliminarSub(d.closest('[data-sub]').dataset.sub); };
+}
+/** Repinta las subtareas y el botón Hoy del panel, sin interrumpir a quien está escribiendo. */
+function refrescarPanelSubs() {
+  const box = $('#subEd'); if (!box || !S.edit || !S.edit.clave) return;
+  const act = document.activeElement;
+  const escribiendo = act && box.contains(act) && (act.matches('[data-ed-txt]') || (act.id === 'subEdAdd' && act.value));
+  const hoyEl = $('#edHoy'); if (hoyEl) hoyEl.innerHTML = botonHoy('tarea', S.edit.clave, true);
+  if (escribiendo) return;
+  const enfocarAdd = act && act.id === 'subEdAdd';
+  box.innerHTML = htmlSubsEditor(S.edit.clave);
+  if (enfocarAdd && $('#subEdAdd')) $('#subEdAdd').focus();
+}
 
 /* ── Copiar avance para Excel (por bloques) ──────────────── */
 function valorExcel(a, k) {
@@ -961,7 +1176,8 @@ function pintarEditor(v) {
   <div class="backdrop" data-close></div>
   <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="edT">
     <div class="drawer-head">
-      <h2 id="edT">${nuevo ? 'Nueva tarea' : `<span class="mono" style="font-size:inherit">${esc(v.id)}</span> <span class="hint" style="font-weight:500">· Semana ${v.semana}</span>`}</h2>
+      <h2 id="edT" style="flex:1">${nuevo ? 'Nueva tarea' : `<span class="mono" style="font-size:inherit">${esc(v.id)}</span> <span class="hint" style="font-weight:500">· Semana ${v.semana}</span>`}</h2>
+      ${nuevo ? '' : `<span id="edHoy">${botonHoy('tarea', v.clave, true)}</span>`}
       <button class="btn btn-ghost btn-icon" data-close aria-label="Cerrar">${ico('x')}</button>
     </div>
     <form class="drawer-body" id="edForm" novalidate>
@@ -981,6 +1197,8 @@ function pintarEditor(v) {
       <div class="field"><label class="label" for="edObs">Observaciones</label>
         <textarea class="textarea" id="edObs" data-k="observaciones" placeholder="Notas, bloqueos o aclaraciones" ${dis}>${esc(v.observaciones)}</textarea></div>
       <span class="err-text" id="edErr" hidden></span>
+      ${nuevo ? '' : `<div class="field"><span class="label">Subtareas <span style="font-weight:400;color:var(--muted)">· se guardan al momento y no se exportan a Excel</span></span>
+        <div class="sub-ed" id="subEd">${htmlSubsEditor(v.clave)}</div></div>`}
 
       <details class="plan" ${nuevo ? 'open' : ''}>
         <summary>${ico('chevron')}Datos del plan</summary>
@@ -1040,7 +1258,9 @@ function pintarEditor(v) {
   const form = $('#edForm');
   form.oninput = revisarCambios;
   form.onsubmit = e => { e.preventDefault(); guardarEditor(); };
-  form.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT') { e.preventDefault(); guardarEditor(); } });
+  form.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT' && !e.target.closest('.sub-ed')) { e.preventDefault(); guardarEditor(); } });
+  wrap.querySelector('.drawer').addEventListener('click', e => { const h = e.target.closest('[data-hoy]'); if (h) { e.preventDefault(); alternarHoy(h.dataset.hoy); } });
+  if (!nuevo) bindSubsEditor(v.clave);
   const save = $('#edSave'); if (save) save.onclick = guardarEditor;
   const del = $('#edDel'); if (del) del.onclick = confirmarEliminar;
   const vl = $('#verLog'); if (vl) vl.onclick = cargarMiniLog;
@@ -2279,6 +2499,7 @@ async function recargar() {
     const r = await api('bootstrap');
     if (!r.ok) return;
     S.user = r.usuario; S.usuarios = r.usuarios; S.acts = r.actividades; S.docs = r.documentos || []; S.rev = r.rev;
+    S.subs = r.subtareas || []; S.hoy = r.hoy || []; S.hoyFecha = r.fechaHoy || hoyISO();
     S.chat.convs = r.conversaciones || []; S.chat.revChat = r.revChat || 0; pintarNavCount();
     try { localStorage.setItem('nexo_user', JSON.stringify(r.usuario)); } catch (_) {}
     elegirSemana();
@@ -2289,11 +2510,15 @@ async function recargar() {
 let sincronizando = false;
 async function sincronizar() {
   if (!S.token || document.hidden || S.pendientes || sincronizando || S.imp) return;
+  if (S.hoyFecha && S.hoyFecha !== hoyISO()) { S.hoyFecha = hoyISO(); recargar(); return; } // cambió el día: las marcas de «Hoy» empiezan de cero
   sincronizando = true;
   try {
     const r = await api('poll', { rev: S.rev });
     if (r.ok && r.cambios) {
       S.acts = r.actividades; S.docs = r.documentos || S.docs; S.rev = r.rev; elegirSemana();
+      if (r.subtareas) S.subs = r.subtareas;
+      if (r.hoy) S.hoy = r.hoy;
+      if (S.edit && S.edit.clave) refrescarPanelSubs();
       if (S.vista === 'tablero') repintarTablero();
       else if (S.vista === 'biblioteca' && !S.docEdit) repintarBib();
       if (S.edit && S.edit.clave) {
@@ -2401,11 +2626,36 @@ const Demo = (() => {
     try { return localStorage.getItem('nexo_demo_file_' + id) || ''; } catch (_) { return ''; }
   }
 
+  /* Subtareas y marcas de «Hoy» de ejemplo */
+  function semillaSubs(db) {
+    const k = id => (db.acts.find(a => a.id === id) || {}).clave;
+    const t = ahoraTxt(); let n = 0;
+    const mk = (id, texto, hecha, responsable) => k(id) ? { id: 'S-' + (++n), clave: k(id), texto, hecha, responsable, orden: n, creadoPor: 'Arturo Gutiérrez', creado: t, modificadoPor: 'Arturo Gutiérrez', modificado: t, version: 1 } : null;
+    db.subs = [
+      mk('MKT37', 'Tomar fotos del proceso de empaque', true, 'Luis Segura'),
+      mk('MKT37', 'Redactar instrucciones paso a paso', true, 'Luis Segura'),
+      mk('MKT37', 'Editar y maquetar el manual', false, 'Luis Segura'),
+      mk('MKT37', 'Revisar con almacén', false, 'Arturo Gutiérrez'),
+      mk('MKT13', 'Guion aprobado', false, 'Luis Segura'),
+      mk('MKT13', 'Grabación', false, 'Luis Segura'),
+      mk('MKT13', 'Edición y subtítulos', false, 'Luis Segura'),
+      mk('MKT1', 'Revisar pedidos de Mercado Libre', false, 'Julio Chávez'),
+      mk('MKT1', 'Revisar pedidos de venta directa', false, 'Julio Chávez'),
+      mk('MKT1', 'Enviar nota a almacén y finanzas', false, 'Julio Chávez')
+    ].filter(Boolean);
+    db.seqSub = n;
+    const s3 = db.subs.find(s => s.texto.startsWith('Editar'));
+    db.hoy = [{ fecha: hoyISO(), usuario: 'julio', tipo: 'tarea', ref: k('MKT1') }];
+    if (s3) db.hoy.push({ fecha: hoyISO(), usuario: 'luis', tipo: 'sub', ref: s3.id });
+  }
+  const hoyDe = db => db.hoy.filter(h => h.fecha === hoyISO()).map(h => ({ usuario: h.usuario, tipo: h.tipo, ref: h.ref }));
+
   const cargar = () => {
     let x = null;
     try { x = JSON.parse(localStorage.getItem(KEY)); } catch (_) {}
     if (!x || !x.acts) x = mem || semilla();
     if (!x.convs) semillaChat(x);
+    if (!x.subs) semillaSubs(x);
     return (mem = x);
   };
   const salvar = x => { mem = x; try { localStorage.setItem(KEY, JSON.stringify(x)); } catch (_) {} };
@@ -2433,6 +2683,8 @@ const Demo = (() => {
     const sem = sems.includes(semanaISO()) ? semanaISO() : Math.max(...sems);
     const t = ahoraTxt(), quien = 'Sistema (reinicio diario)';
     let n = 0;
+    const diarias = db.acts.filter(a => a.semana === sem && norm(a.frecuencia) === 'diaria').map(a => a.clave);
+    (db.subs || []).forEach(x => { if (x.hecha && diarias.includes(x.clave)) { x.hecha = false; x.modificadoPor = quien; x.modificado = t; x.version++; n++; } });
     db.acts.forEach(a => {
       if (a.semana !== sem || norm(a.frecuencia) !== 'diaria' || !['En revisión', 'Terminado'].includes(a.estado)) return;
       log(db, [[t, quien, 'Reinició', a.clave, a.tarea, 'Estatus', a.estado, 'En proceso']]);
@@ -2456,6 +2708,7 @@ const Demo = (() => {
     switch (req.action) {
       case 'logout': return { ok: true };
       case 'bootstrap': reinicio(db); salvar(db); return { ok: true, usuario: pub(u), usuarios: USERS.map(pub), actividades: db.acts.map(a => ({ ...a })), documentos: db.docs.filter(d => verDoc(d, u)).map(d => ({ ...d })), rev: db.rev,
+        subtareas: db.subs.map(x => ({ ...x })), hoy: hoyDe(db), fechaHoy: hoyISO(),
         conversaciones: db.convs.filter(c => verConv(c, u)).map(c => convPub(db, c, u)), revChat: db.revChat };
       case 'chatPoll': {
         if (Number(req.revChat) === db.revChat) return { ok: true, cambios: false, revChat: db.revChat };
@@ -2541,7 +2794,47 @@ const Demo = (() => {
       case 'poll': {
         reinicio(db);
         if (Number(req.rev) === db.rev) return { ok: true, cambios: false, rev: db.rev };
-        return { ok: true, cambios: true, rev: db.rev, autores: [], actividades: db.acts.map(a => ({ ...a })), documentos: db.docs.filter(d => verDoc(d, u)).map(d => ({ ...d })) };
+        return { ok: true, cambios: true, rev: db.rev, autores: [], actividades: db.acts.map(a => ({ ...a })), documentos: db.docs.filter(d => verDoc(d, u)).map(d => ({ ...d })),
+                 subtareas: db.subs.map(x => ({ ...x })), hoy: hoyDe(db), fechaHoy: hoyISO() };
+      }
+      case 'subCrear': case 'subActualizar': case 'subEliminar': case 'hoyMarcar': {
+        if (u.rol === 'lector') return { ok: false, error: 'PERMISO', mensaje: 'Tu usuario solo puede consultar.' };
+        if (req.action === 'hoyMarcar') {
+          const tipo = req.tipo === 'sub' ? 'sub' : 'tarea';
+          const existe = tipo === 'sub' ? db.subs.some(x => x.id === req.ref) : db.acts.some(a => a.clave === req.ref);
+          if (!existe) return { ok: false, error: 'NOEXISTE', mensaje: 'Esa tarea ya no existe.' };
+          const i = db.hoy.findIndex(h => h.fecha === hoyISO() && h.usuario === u.usuario && h.tipo === tipo && h.ref === req.ref);
+          if (req.valor && i < 0) db.hoy.push({ fecha: hoyISO(), usuario: u.usuario, tipo, ref: req.ref });
+          else if (!req.valor && i >= 0) db.hoy.splice(i, 1);
+          else return { ok: true, hoy: hoyDe(db), rev: db.rev };
+          db.rev++; salvar(db); return { ok: true, hoy: hoyDe(db), rev: db.rev };
+        }
+        if (req.action === 'subCrear') {
+          const a = db.acts.find(x => x.clave === req.datos.clave);
+          if (!a) return { ok: false, error: 'NOEXISTE', mensaje: 'La tarea ya no existe.' };
+          const texto = String(req.datos.texto || '').replace(/\s+/g, ' ').trim().slice(0, 300);
+          if (!texto) return { ok: false, error: 'VALIDACION', mensaje: 'Escribe la subtarea.' };
+          const orden = db.subs.filter(x => x.clave === a.clave).reduce((m, x) => Math.max(m, x.orden), 0) + 1;
+          const o = { id: 'S-' + (++db.seqSub), clave: a.clave, texto, hecha: false, responsable: req.datos.responsable || '', orden, creadoPor: u.nombre, creado: ahora, modificadoPor: u.nombre, modificado: ahora, version: 1 };
+          db.subs.push(o); db.rev++; log(db, [[ahora, u.nombre, 'Agregó subtarea', a.clave, a.tarea, 'Subtarea', '', texto]]); salvar(db);
+          return { ok: true, subtarea: { ...o }, rev: db.rev };
+        }
+        const x = db.subs.find(y => y.id === req.id);
+        if (req.action === 'subEliminar') {
+          if (x) { db.subs = db.subs.filter(y => y !== x); db.rev++; log(db, [[ahora, u.nombre, 'Eliminó subtarea', x.clave, '', 'Subtarea', x.texto, '']]); salvar(db); }
+          return { ok: true, rev: db.rev };
+        }
+        if (!x) return { ok: false, error: 'NOEXISTE', mensaje: 'Esta subtarea ya no existe.' };
+        const d = req.datos || {};
+        if (d.texto !== undefined && req.version && req.version !== x.version) return { ok: false, error: 'CONFLICTO', subtarea: { ...x }, mensaje: `${x.modificadoPor} cambió esta subtarea mientras la editabas.` };
+        const L = [];
+        if (d.texto !== undefined) { const t2 = String(d.texto).replace(/\s+/g, ' ').trim().slice(0, 300); if (!t2) return { ok: false, error: 'VALIDACION', mensaje: 'La subtarea no puede quedar vacía.' }; if (t2 !== x.texto) { L.push([ahora, u.nombre, 'Editó subtarea', x.clave, '', 'Subtarea', x.texto, t2]); x.texto = t2; } }
+        if (d.hecha !== undefined && !!d.hecha !== x.hecha) { x.hecha = !!d.hecha; L.push([ahora, u.nombre, x.hecha ? 'Completó subtarea' : 'Reabrió subtarea', x.clave, '', 'Subtarea', '', x.texto]); }
+        if (d.responsable !== undefined && d.responsable !== x.responsable) { L.push([ahora, u.nombre, 'Editó subtarea', x.clave, '', 'Responsable · ' + x.texto, x.responsable, d.responsable]); x.responsable = d.responsable; }
+        if (!L.length) return { ok: true, subtarea: { ...x }, sinCambios: true, rev: db.rev };
+        Object.assign(x, { modificadoPor: u.nombre, modificado: ahora, version: x.version + 1 });
+        db.rev++; log(db, L); salvar(db);
+        return { ok: true, subtarea: { ...x }, rev: db.rev };
       }
       case 'docCrear': case 'docActualizar': case 'docEliminar': {
         if (u.rol !== 'admin') return { ok: false, error: 'PERMISO', mensaje: 'Solo el administrador puede hacer esto.' };
@@ -2595,7 +2888,7 @@ const Demo = (() => {
       }
       case 'eliminar': {
         const a = db.acts.find(x => x.clave === req.clave);
-        if (a) { db.acts = db.acts.filter(x => x !== a); db.rev++; log(db, [[ahora, u.nombre, 'Eliminó', a.clave, a.tarea, '', [a.responsable, a.estado].filter(Boolean).join(' · '), '']]); salvar(db); }
+        if (a) { db.acts = db.acts.filter(x => x !== a); db.subs = db.subs.filter(x => x.clave !== a.clave); db.rev++; log(db, [[ahora, u.nombre, 'Eliminó', a.clave, a.tarea, '', [a.responsable, a.estado].filter(Boolean).join(' · '), '']]); salvar(db); }
         return { ok: true, rev: db.rev };
       }
       case 'importar': {
