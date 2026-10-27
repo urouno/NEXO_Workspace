@@ -1,0 +1,1335 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NEXO Workspace</title>
+<meta name="theme-color" content="#F8FAFC">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+/* ── Tokens (DESIGN.md · NEXO) ───────────────────────────── */
+:root{
+  --canvas:#F8FAFC; --surface:#FFFFFF; --subtle:#F1F5F9;
+  --border:#E2E8F0; --border-strong:#CBD5E1;
+  --text:#0F172A; --text-2:#475569; --muted:#64748B; --placeholder:#94A3B8;
+  --primary:#2563EB; --primary-hover:#1D4ED8; --primary-soft:#EFF6FF; --focus:rgba(37,99,235,.15);
+  --ok:#10B981; --ok-bg:#ECFDF5; --ok-bd:#A7F3D0; --ok-tx:#065F46;
+  --warn:#F59E0B; --warn-bg:#FFFBEB; --warn-bd:#FDE68A; --warn-tx:#92400E;
+  --bad:#EF4444; --bad-bg:#FEF2F2; --bad-bd:#FECACA; --bad-tx:#991B1B;
+  --info:#0284C7;
+  --sh1:0 1px 2px rgba(15,23,42,.04),0 1px 3px rgba(15,23,42,.06);
+  --sh2:0 4px 6px -1px rgba(15,23,42,.06),0 2px 4px -2px rgba(15,23,42,.04);
+  --sh3:0 20px 25px -5px rgba(15,23,42,.08),0 8px 10px -6px rgba(15,23,42,.04);
+  --r:8px; --r-lg:16px; --r-xl:24px;
+  /* Escala tipográfica: 4 tamaños */
+  --fs-title:24px; --fs-sub:16px; --fs-body:14px; --fs-label:12px;
+  --font:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body,#root{height:100%}
+body{font-family:var(--font);font-size:var(--fs-body);line-height:1.5;color:var(--text);background:var(--canvas);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ── Botones ─────────────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 16px;border-radius:var(--r);font-weight:600;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
+.btn svg{width:16px;height:16px;flex:none}
+.btn-primary{background:var(--primary);color:#fff;box-shadow:0 1px 2px rgba(37,99,235,.2)}
+.btn-primary:hover{background:var(--primary-hover)}
+.btn-primary:disabled{background:var(--border-strong);box-shadow:none;cursor:not-allowed}
+.btn-sec{background:var(--surface);border:1px solid var(--border);color:var(--text)}
+.btn-sec:hover{background:var(--canvas);border-color:var(--border-strong)}
+.btn-ghost{color:var(--muted)}
+.btn-ghost:hover{background:var(--subtle);color:var(--text)}
+.btn-danger{color:var(--bad-tx);padding:0 8px}
+.btn-danger:hover{background:var(--bad-bg)}
+.btn-icon{width:40px;padding:0}
+.btn:focus-visible,.nav-item:focus-visible,.card:focus-visible,.seg button:focus-visible,.chip-toggle:focus-visible{outline:none;box-shadow:0 0 0 3px var(--focus);border-color:var(--primary)}
+
+/* ── Campos ──────────────────────────────────────────────── */
+.field{display:flex;flex-direction:column;gap:8px}
+.label{font-size:var(--fs-label);font-weight:600;letter-spacing:.02em;color:var(--text-2)}
+.input,.select,.textarea{width:100%;height:40px;padding:0 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);transition:border-color .15s,box-shadow .15s}
+.textarea{height:auto;min-height:96px;padding:8px 12px;resize:vertical;line-height:1.5}
+.input::placeholder,.textarea::placeholder{color:var(--placeholder)}
+.input:focus,.select:focus,.textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--focus)}
+.select{appearance:none;padding-right:32px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%2364748B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.hint{font-size:var(--fs-label);color:var(--muted)}
+.err-text{font-size:var(--fs-label);color:var(--bad-tx);font-weight:500}
+
+/* Selector segmentado (estado / prioridad) */
+.seg{display:flex;gap:4px;padding:4px;background:var(--subtle);border-radius:var(--r);flex-wrap:wrap}
+.seg button{flex:1;min-width:max-content;height:32px;padding:0 12px;border-radius:6px;font-size:var(--fs-body);font-weight:500;color:var(--text-2);border:1px solid transparent}
+.seg button:hover{color:var(--text)}
+.seg button[aria-pressed=true]{background:var(--surface);color:var(--text);font-weight:600;border-color:var(--border);box-shadow:var(--sh1)}
+
+/* ── Badges ──────────────────────────────────────────────── */
+.badge{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:999px;font-size:var(--fs-label);font-weight:600;letter-spacing:.02em;border:1px solid var(--border);background:var(--subtle);color:var(--text-2);white-space:nowrap}
+.badge.bad{background:var(--bad-bg);border-color:var(--bad-bd);color:var(--bad-tx)}
+.badge.warn{background:var(--warn-bg);border-color:var(--warn-bd);color:var(--warn-tx)}
+.badge.ok{background:var(--ok-bg);border-color:var(--ok-bd);color:var(--ok-tx)}
+.badge.info{background:var(--primary-soft);border-color:#BFDBFE;color:var(--primary-hover)}
+.dot{width:8px;height:8px;border-radius:50%;flex:none;background:var(--placeholder)}
+.dot[data-e="En proceso"]{background:var(--warn)}
+.dot[data-e="En revisión"]{background:var(--info)}
+.dot[data-e="Finalizado"]{background:var(--ok)}
+.avatar{width:24px;height:24px;border-radius:50%;background:var(--subtle);border:1px solid var(--border);color:var(--text-2);font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.avatar.lg{width:32px;height:32px;font-size:12px}
+.mono{font-family:var(--mono);font-size:var(--fs-label);color:var(--muted)}
+
+/* ── Login ───────────────────────────────────────────────── */
+.login{min-height:100%;display:flex;align-items:center;justify-content:center;padding:24px}
+.login-card{width:100%;max-width:384px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--sh2);padding:40px 32px;display:flex;flex-direction:column;gap:24px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:700;letter-spacing:.08em;font-size:var(--fs-sub)}
+.brand-mark{width:32px;height:32px;border-radius:var(--r);background:var(--text);color:#fff;display:flex;align-items:center;justify-content:center;font-size:var(--fs-body);letter-spacing:0}
+.login h1{font-size:var(--fs-title);font-weight:700;letter-spacing:-.02em;line-height:1.3}
+.login p{color:var(--muted)}
+.demo-hint{padding:12px 16px;border-radius:var(--r);background:var(--canvas);border:1px dashed var(--border-strong);color:var(--text-2);font-size:var(--fs-label)}
+
+/* ── Layout ──────────────────────────────────────────────── */
+.app{display:flex;height:100%}
+.rail{width:80px;flex:none;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:8px}
+.rail .brand-mark{margin-bottom:16px}
+.nav-item{width:64px;padding:8px 0;border-radius:var(--r);display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;font-weight:600;color:var(--muted);border:1px solid transparent;transition:background .15s,color .15s}
+.nav-item svg{width:20px;height:20px}
+.nav-item:hover{background:var(--subtle);color:var(--text)}
+.nav-item[aria-current=page]{background:var(--primary-soft);color:var(--primary)}
+.rail-foot{margin-top:auto;display:flex;flex-direction:column;align-items:center;gap:8px}
+.main{flex:1;min-width:0;display:flex;flex-direction:column;height:100%}
+.topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:24px 32px 16px}
+.topbar h1{font-size:var(--fs-title);font-weight:700;letter-spacing:-.02em;line-height:1.3}
+.stats{display:flex;gap:16px;flex-wrap:wrap;color:var(--muted);margin-top:4px}
+.stats b{color:var(--text);font-weight:600}
+.stats .alert b,.stats .alert{color:var(--bad-tx)}
+.sync{white-space:nowrap;flex:none;display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 12px;border-radius:999px;font-size:var(--fs-label);font-weight:600;color:var(--muted);background:var(--surface);border:1px solid var(--border)}
+.sync .dot{background:var(--ok)}
+.sync[data-s=saving] .dot{background:var(--warn)}
+.sync[data-s=error] .dot{background:var(--bad)}
+.demo-bar{margin:0 32px 8px;padding:8px 12px;border-radius:var(--r);background:var(--warn-bg);border:1px solid var(--warn-bd);color:var(--warn-tx);font-size:var(--fs-label);font-weight:500}
+
+.toolbar{display:flex;align-items:center;gap:8px;padding:0 32px 16px;flex-wrap:wrap}
+.search{position:relative;flex:0 1 320px;min-width:200px}
+.search svg{position:absolute;left:12px;top:12px;width:16px;height:16px;color:var(--placeholder);pointer-events:none}
+.search .input{padding-left:36px}
+.kbd{position:absolute;right:8px;top:9px;font-size:11px;font-weight:600;color:var(--placeholder);border:1px solid var(--border);border-radius:4px;padding:0 6px;line-height:20px}
+.chip-toggle{height:40px;padding:0 12px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface);font-weight:600;color:var(--text-2);display:inline-flex;align-items:center;gap:8px}
+.chip-toggle svg{width:16px;height:16px}
+.chip-toggle[aria-pressed=true]{background:var(--primary-soft);border-color:#BFDBFE;color:var(--primary-hover)}
+.chip-toggle .count{min-width:20px;height:20px;border-radius:999px;background:var(--primary);color:#fff;font-size:11px;display:inline-flex;align-items:center;justify-content:center;padding:0 6px}
+.spacer{flex:1}
+.filters{display:flex;gap:16px;align-items:flex-end;padding:0 32px 16px;flex-wrap:wrap}
+.filters .field{width:200px}
+
+/* ── Kanban ──────────────────────────────────────────────── */
+.board-wrap{flex:1;min-height:0;padding:0 32px 32px;overflow:auto}
+.col-tabs{display:none}
+.board{display:grid;grid-template-columns:repeat(4,minmax(240px,1fr));gap:16px;min-height:100%;align-items:start}
+.col{background:var(--canvas);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;display:flex;flex-direction:column;gap:12px;min-height:240px;transition:border-color .15s,background .15s}
+.col.drop{border-color:var(--primary);background:var(--primary-soft)}
+.col-head{display:flex;align-items:center;gap:8px;font-weight:600}
+.col-head .badge{margin-left:auto}
+.cards{display:flex;flex-direction:column;gap:8px;flex:1}
+.card{text-align:left;width:100%;cursor:pointer;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh1);padding:14px;display:flex;flex-direction:column;gap:8px;transition:border-color .15s,box-shadow .15s}
+.card:hover{border-color:var(--border-strong);box-shadow:var(--sh2)}
+.card.dragging{opacity:.5}
+.card.saving{border-style:dashed}
+.card.flash{border-color:var(--ok-bd);box-shadow:0 0 0 3px var(--ok-bg)}
+.card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.card-title{font-weight:600;line-height:1.4;word-break:break-word}
+.card.done .card-title{color:var(--muted)}
+.card-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--muted);font-size:var(--fs-label);font-weight:500}
+.who{display:flex;align-items:center;gap:8px;min-width:0}
+.who span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.due{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.due svg{width:14px;height:14px}
+.due.late{color:var(--bad-tx);font-weight:600}
+.empty-col{border:1px dashed var(--border-strong);border-radius:var(--r);padding:24px 16px;text-align:center;color:var(--placeholder);font-size:var(--fs-label);font-weight:500}
+
+/** Al actualizar por importación, una celda vacía conserva el valor que ya existía. */
+function conservarVacios(previa, nueva) {
+  const o = { id: previa.id, actividad: previa.actividad, descripcion: previa.descripcion, responsable: previa.responsable, prioridad: previa.prioridad, fecha: previa.fecha, estado: previa.estado };
+  Object.keys(nueva).forEach(k => { if (String(nueva[k] ?? '').trim() !== '') o[k] = nueva[k]; });
+  return o;
+}
+
+/* ── Historial ───────────────────────────────────────────── */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:auto}
+table{width:100%;border-collapse:collapse}
+th{background:var(--canvas);text-align:left;font-size:var(--fs-label);font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);height:40px;padding:0 16px;border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;top:0}
+td{padding:12px 16px;border-bottom:1px solid var(--subtle);vertical-align:top}
+tr:last-child td{border-bottom:0}
+tbody tr:hover{background:var(--canvas)}
+.arrow{color:var(--placeholder);padding:0 4px}
+.empty{padding:48px 16px;text-align:center;color:var(--muted)}
+
+/* ── Panel lateral (editar) ──────────────────────────────── */
+.backdrop{position:fixed;inset:0;background:rgba(15,23,42,.4);backdrop-filter:blur(4px);z-index:20}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(480px,100%);background:var(--surface);border-left:1px solid var(--border);box-shadow:var(--sh3);z-index:21;display:flex;flex-direction:column}
+.drawer-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:16px 24px;border-bottom:1px solid var(--border)}
+.drawer-head h2{font-size:var(--fs-sub);font-weight:600}
+.drawer-body{flex:1;overflow:auto;padding:24px;display:flex;flex-direction:column;gap:24px}
+.drawer-foot{display:flex;align-items:center;gap:8px;padding:16px 24px;border-top:1px solid var(--border)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.meta{padding:12px 16px;border-radius:var(--r);background:var(--canvas);color:var(--muted);font-size:var(--fs-label);display:flex;flex-direction:column;gap:4px}
+.meta b{color:var(--text-2);font-weight:600}
+.link{color:var(--primary);font-weight:600;display:inline-flex;align-items:center;gap:4px}
+.link:hover{text-decoration:underline}
+.link svg{width:16px;height:16px}
+.mini-log{display:flex;flex-direction:column;gap:12px}
+.mini-log li{list-style:none;display:flex;gap:12px}
+.mini-log .t{font-size:var(--fs-label);color:var(--muted)}
+
+/* ── Modal (importar) ────────────────────────────────────── */
+.modal{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;padding:24px}
+.modal-box{position:relative;width:min(960px,100%);max-height:100%;background:var(--surface);border:1px solid rgba(226,232,240,.8);border-radius:var(--r-xl);box-shadow:var(--sh3);display:flex;flex-direction:column}
+.modal-box.sm{width:min(440px,100%)}
+.modal-head{padding:24px 24px 16px;display:flex;flex-direction:column;gap:16px}
+.modal-head-row{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.modal-head h2{font-size:var(--fs-title);font-weight:700;letter-spacing:-.02em;line-height:1.3}
+.modal-body{padding:0 24px 24px;overflow:auto;display:flex;flex-direction:column;gap:16px}
+.modal-foot{display:flex;gap:8px;justify-content:flex-end;padding:16px 24px;border-top:1px solid var(--border)}
+.steps{display:flex;flex-direction:column;gap:8px}
+.steps-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.steps-bar i{height:4px;border-radius:2px;background:var(--border)}
+.steps-bar i.on{background:var(--primary)}
+.cols-chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.paste{min-height:200px;font-family:var(--mono);font-size:var(--fs-label);white-space:pre;overflow:auto}
+.summary{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.preview td{padding:8px 12px;font-size:var(--fs-label)}
+.preview th{padding:0 12px}
+.preview .mono{white-space:nowrap}
+.preview tr.has-err td{background:var(--bad-bg)}
+.preview .msg{display:block;margin-top:4px;font-weight:600}
+.preview .msg.bad{color:var(--bad-tx)}
+.preview .msg.warn{color:var(--warn-tx)}
+.result{display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px;padding:32px 0}
+.result-icon{width:56px;height:56px;border-radius:50%;background:var(--ok-bg);border:1px solid var(--ok-bd);color:var(--ok);display:flex;align-items:center;justify-content:center}
+.result-icon svg{width:28px;height:28px}
+.result h3{font-size:var(--fs-sub);font-weight:600}
+
+/* ── Avisos ──────────────────────────────────────────────── */
+.toasts{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:40;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{pointer-events:auto;display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:var(--r);background:var(--text);color:#fff;font-weight:500;box-shadow:var(--sh3);max-width:min(560px,calc(100vw - 32px))}
+.toast svg{width:18px;height:18px;flex:none}
+.toast.ok svg{color:#34D399}
+.toast.bad svg{color:#F87171}
+.toast.info svg{color:#93C5FD}
+.toast button{color:#93C5FD;font-weight:600;margin-left:8px}
+
+/* ── Móvil ───────────────────────────────────────────────── */
+@media (max-width:1023px){
+  .board{grid-template-columns:repeat(4,minmax(260px,1fr))}
+}
+@media (max-width:767px){
+  .app{flex-direction:column-reverse}
+  .rail{width:100%;height:64px;flex-direction:row;justify-content:space-around;padding:0 8px calc(env(safe-area-inset-bottom)) 8px;border-right:0;border-top:1px solid var(--border)}
+  .rail .brand-mark{display:none}
+  .rail-foot{margin:0;flex-direction:row}
+  .rail-foot .avatar{display:none}
+  .main{height:calc(100% - 64px)}
+  .topbar{padding:16px 16px 8px}
+  .demo-bar{margin:0 16px 8px}
+  .toolbar,.filters{padding:0 16px 16px}
+  .search{flex:1 1 100%}
+  .kbd{display:none}
+  .toolbar .lbl{display:none}
+  .toolbar .btn-sec{width:40px;padding:0}
+  .filters .field{width:calc(50% - 8px)}
+  .board-wrap{padding:0 16px 16px}
+  .col-tabs{display:flex;flex-wrap:nowrap;overflow-x:auto;margin-bottom:16px}
+  .toolbar .chip-toggle .lbl{display:none}
+  .toolbar .chip-toggle{width:40px;justify-content:center;padding:0;position:relative}
+  .toolbar .chip-toggle .count{position:absolute;top:-6px;right:-6px}
+  .col-tabs button{font-size:var(--fs-label);padding:0 8px}
+  .board{display:block}
+  .col{display:none;min-height:0;background:transparent;border:0;padding:0}
+  .col.active{display:flex}
+  .col-head{display:none}
+  .row2{grid-template-columns:1fr}
+  .modal{padding:0;align-items:flex-end}
+  .modal-box{border-radius:var(--r-xl) var(--r-xl) 0 0;max-height:92%}
+  .hist-table thead{display:none}
+  .hist-table tr{display:flex;flex-direction:column;gap:4px;padding:12px 16px;border-bottom:1px solid var(--subtle)}
+  .hist-table td{padding:0;border:0}
+  .input,.select{height:44px}
+}
+
+/* ── Plan de trabajo ─────────────────────────────────────── */
+.card-title{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.progress{display:flex;align-items:center;gap:8px;font-size:var(--fs-label);font-weight:600;color:var(--text-2)}
+.progress-bar{flex:1;height:4px;border-radius:2px;background:var(--subtle);overflow:hidden}
+.progress-bar i{display:block;height:100%;background:var(--text-2);border-radius:2px}
+.card.done .progress-bar i{background:var(--ok)}
+.tarea-txt{font-size:var(--fs-sub);font-weight:600;line-height:1.5}
+.meta-line{display:flex;gap:8px;align-items:flex-start;color:var(--text-2);font-size:var(--fs-body)}
+.meta-line .label{flex:none;padding-top:2px}
+.pct{position:relative}
+.pct .input{padding-right:32px}
+.pct::after{content:'%';position:absolute;right:12px;top:10px;color:var(--muted);font-weight:600}
+details.plan{border:1px solid var(--border);border-radius:var(--r)}
+details.plan summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:12px 16px;font-weight:600;color:var(--text-2)}
+details.plan summary::-webkit-details-marker{display:none}
+details.plan summary svg{width:16px;height:16px;transition:transform .15s}
+details.plan[open] summary svg{transform:rotate(90deg)}
+details.plan[open] summary{border-bottom:1px solid var(--border)}
+.plan-body{padding:16px;display:flex;flex-direction:column;gap:16px}
+.week{width:auto;min-width:144px;font-weight:600}
+.export-opt{display:flex;gap:16px;align-items:flex-start;padding:16px;border:1px solid var(--border);border-radius:var(--r)}
+.export-opt.main{border-color:#BFDBFE;background:var(--primary-soft)}
+.export-opt .btn{flex:none}
+.export-opt .txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.export-opt b{font-weight:600}
+.letras{font-family:var(--mono);font-size:var(--fs-label);font-weight:500;color:var(--primary-hover)}
+@media (max-width:767px){
+  .export-opt{flex-direction:column}
+  .week{min-width:0;flex:1}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   CONFIGURACIÓN
+   Pega aquí la URL de tu Apps Script publicado como aplicación web.
+   Si la dejas vacía, la app funciona en MODO DEMO (datos solo en
+   este navegador) para que puedas probarla.
+   ════════════════════════════════════════════════════════════ */
+const API_URL = '';
+
+/* Estatus del plan = columnas del tablero (deben coincidir con Code.gs). */
+const ESTADOS = ['Programado', 'En proceso', 'En revisión', 'Terminado'];
+const ALIAS_ESTADO = { 'pendiente': 'Programado', 'por hacer': 'Programado', 'en progreso': 'En proceso', revision: 'En revisión', finalizado: 'Terminado', cumplido: 'Terminado', completado: 'Terminado', hecho: 'Terminado' };
+const ID_PREFIJO = 'MKT';
+const SEGUNDOS_SYNC = 30;
+
+/* Columnas del plan de trabajo, en el orden en que se pegan (sin las columnas ocultas D–I). */
+const CAMPOS_PLAN = ['semana', 'id', 'tarea', 'tipo', 'prealineacion', 'responsable', 'fecha', 'frecuencia', 'estado', 'resultado', 'pctDiario', 'pctAcum', 'observaciones', 'meta'];
+const NOMBRES = { semana: 'Número de semana', id: 'ID', tarea: 'Tareas', tipo: 'Tipo de actividad', prealineacion: 'Estatus prealineación', responsable: 'Responsable', fecha: 'Fecha compromiso', frecuencia: 'Frecuencia', estado: 'Estatus', resultado: 'Resultado', pctDiario: '% Diario', pctAcum: '% Acumulado', observaciones: 'Observaciones', meta: 'Meta' };
+/* Bloques para pegar de vuelta en Excel (separados por las columnas ocultas D–I). */
+const BLOQUES = [
+  { letras: 'J–T', titulo: 'Avance del plan', detalle: 'Tipo de actividad → Meta. Incluye estatus, resultado, % diario, % acumulado y observaciones.', celda: 'columna J', campos: ['tipo', 'prealineacion', 'responsable', 'fecha', 'frecuencia', 'estado', 'resultado', 'pctDiario', 'pctAcum', 'observaciones', 'meta'] },
+  { letras: 'A–C', titulo: 'Semana, ID y Tareas', detalle: 'Solo hace falta si agregaste tareas nuevas o cambiaste su texto.', celda: 'columna A', campos: ['semana', 'id', 'tarea'] }
+];
+/* Columnas que se omiten si alguien copia A–T con las ocultas incluidas (D a I). */
+const OCULTAS = [3, 4, 5, 6, 7, 8];
+const SUGERENCIAS = { tipo: ['Operativa', 'Avance', 'Proyecto'], prealineacion: ['Minuta'], frecuencia: ['Diaria', 'Semanal', 'Mensual', 'Trimestral'] };
+
+/* ── Íconos ──────────────────────────────────────────────── */
+const I = {
+  board: '<path d="M3 4h5v16H3zM10 4h5v10h-5zM17 4h4v13h-4z"/>',
+  history: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  filter: '<path d="M4 5h16M7 12h10M10 19h4"/>',
+  upload: '<path d="M12 15V4m0 0L8 8m4-4 4 4"/><path d="M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/>',
+  copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  x: '<path d="M18 6 6 18M6 6l12 12"/>',
+  check: '<path d="m5 12 5 5L20 7"/>',
+  alert: '<circle cx="12" cy="12" r="9"/><path d="M12 8v4m0 4h.01"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/>',
+  cal: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  logout: '<path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h11"/>',
+  refresh: '<path d="M20 11a8 8 0 0 0-14.9-3M4 4v4h4M4 13a8 8 0 0 0 14.9 3M20 20v-4h-4"/>',
+  chevron: '<path d="m9 6 6 6-6 6"/>',
+  file: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/>'
+};
+const ico = n => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]}</svg>`;
+
+/* ── Utilidades ──────────────────────────────────────────── */
+const $ = (s, el = document) => el.querySelector(s);
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const norm = v => String(v ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
+const iniciales = n => String(n || '?').trim().split(/\s+/).slice(0, 2).map(p => p[0]).join('').toUpperCase() || '?';
+const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const hoyISO = () => iso(new Date());
+const ahoraTxt = () => { const d = new Date(); return `${hoyISO()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+function fechaCorta(f) {
+  if (!f) return '';
+  const [y, m, d] = f.split('-').map(Number);
+  return `${d} ${MESES[m - 1]}${y !== new Date().getFullYear() ? ' ' + y : ''}`;
+}
+const fechaExcel = f => { if (!f) return ''; const [y, m, d] = f.split('-'); return `${d}/${m}/${y}`; };
+const vencida = a => a.fecha && a.estado !== 'Terminado' && a.fecha < hoyISO();
+const pctTxt = p => p === '' || p == null ? '' : `${p}%`;
+const clave = (semana, id) => `${semana}-${String(id).trim()}`;
+function semanaISO(f = new Date()) {
+  const d = new Date(Date.UTC(f.getFullYear(), f.getMonth(), f.getDate()));
+  const dia = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dia);
+  const ini = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil(((d - ini) / 864e5 + 1) / 7);
+}
+
+/** 'aaaa-mm-dd', '' si está vacía, o null si no se reconoce. Acepta 30-oct, dd/mm/aaaa, aaaa-mm-dd y serie de Excel. */
+function normFecha(v) {
+  const s = String(v ?? '').trim();
+  if (!s) return '';
+  let y, m, d, x;
+  if ((x = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))) { y = +x[1]; m = +x[2]; d = +x[3]; }
+  else if ((x = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/))) { d = +x[1]; m = +x[2]; y = +x[3]; if (y < 100) y += 2000; }
+  else if ((x = norm(s).match(/^(\d{1,2})[\s\-\/.]*(?:de\s*)?([a-z]{3})[a-z]*\.?(?:[\s\-\/.]*(?:de\s*)?(\d{2,4}))?$/))) {
+    d = +x[1]; m = MESES.indexOf(x[2]) + 1; if (!m) return null;
+    const hoy = new Date();
+    y = x[3] ? +x[3] : hoy.getFullYear(); if (y < 100) y += 2000;
+    if (!x[3] && m - (hoy.getMonth() + 1) < -6) y++;
+  }
+  else if (/^\d{5}$/.test(s)) { const f = new Date(Date.UTC(1899, 11, 30) + Number(s) * 864e5); y = f.getUTCFullYear(); m = f.getUTCMonth() + 1; d = f.getUTCDate(); }
+  else return null;
+  const t = new Date(Date.UTC(y, m - 1, d));
+  if (t.getUTCFullYear() !== y || t.getUTCMonth() !== m - 1 || t.getUTCDate() !== d) return null;
+  return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+}
+/** '90%', '90', '0.9' → '90'. Vacío → ''. No válido → null. */
+function normPct(v) {
+  let s = String(v ?? '').trim().replace(',', '.');
+  if (!s) return '';
+  const conSigno = s.includes('%');
+  s = s.replace('%', '').trim();
+  let n = Number(s);
+  if (isNaN(n)) return null;
+  if (!conSigno && n > 0 && n <= 1 && s.includes('.')) n *= 100;
+  n = Math.round(n * 10) / 10;
+  if (n < 0 || n > 1000) return null;
+  return String(n);
+}
+function canon(v, lista, alias = {}) {
+  const n = norm(v);
+  if (!n) return '';
+  return lista.find(x => norm(x) === n) || alias[n] || null;
+}
+
+/** Misma validación que el servidor. */
+function limpiar(d) {
+  const s = (v, max) => String(v ?? '').trim().slice(0, max);
+  const semTxt = s(d.semana, 4);
+  const o = {
+    semana: semTxt ? Number(semTxt) : semanaISO(), id: s(d.id, 40), tarea: s(d.tarea, 500), tipo: s(d.tipo, 60),
+    prealineacion: s(d.prealineacion, 60), responsable: s(d.responsable, 80), fecha: normFecha(d.fecha), frecuencia: s(d.frecuencia, 40),
+    estado: canon(d.estado, ESTADOS, ALIAS_ESTADO), resultado: s(d.resultado, 2000), pctDiario: normPct(d.pctDiario), pctAcum: normPct(d.pctAcum),
+    observaciones: s(d.observaciones, 3000), meta: s(d.meta, 500)
+  };
+  const err = m => ({ error: 'VALIDACION', mensaje: m });
+  if (!o.tarea) return err('Falta la descripción de la tarea.');
+  if (!(o.semana >= 1 && o.semana <= 53)) return err(`Número de semana no válido: "${d.semana}".`);
+  if (o.estado === null) return err(`Estatus no válido: "${d.estado}". Usa ${ESTADOS.join(', ')}.`);
+  if (o.fecha === null) return err(`Fecha no reconocida: "${d.fecha}".`);
+  if (o.pctDiario === null) return err(`% Diario no válido: "${d.pctDiario}".`);
+  if (o.pctAcum === null) return err(`% Acumulado no válido: "${d.pctAcum}".`);
+  o.estado = o.estado || ESTADOS[0];
+  return o;
+}
+const CAMPOS_EDIT = ['tarea', 'tipo', 'prealineacion', 'responsable', 'fecha', 'frecuencia', 'estado', 'resultado', 'pctDiario', 'pctAcum', 'observaciones', 'meta'];
+
+/** Al actualizar por importación, una celda vacía conserva el valor que ya existía. */
+function conservarVacios(previa, nueva) {
+  const o = {}; ['semana', 'id'].concat(CAMPOS_EDIT).forEach(k => { o[k] = previa[k]; });
+  Object.keys(nueva).forEach(k => { if (String(nueva[k] ?? '').trim() !== '') o[k] = nueva[k]; });
+  return o;
+}
+
+/* ── Estado de la app ────────────────────────────────────── */
+const S = {
+  token: null, user: null, usuarios: [], acts: [], rev: 0, semana: null,
+  vista: 'tablero', colMovil: ESTADOS[1], verFiltros: false,
+  f: { q: '', resp: '', tipo: '', frec: '', mias: false },
+  edit: null, imp: null, hist: { registros: [], usuario: '', q: '', cargando: false },
+  pendientes: 0
+};
+try { S.token = localStorage.getItem('nexo_token'); S.user = JSON.parse(localStorage.getItem('nexo_user') || 'null'); } catch (e) {}
+
+/* ── Conexión con el servidor ────────────────────────────── */
+async function api(action, payload = {}) {
+  const body = Object.assign({ action, token: S.token }, payload);
+  let res;
+  if (!API_URL) res = await Demo.handle(body);
+  else {
+    const r = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) });
+    res = await r.json();
+  }
+  if (res && !res.ok && res.error === 'SESION') { salirLocal(); toast(res.mensaje, 'info'); }
+  return res;
+}
+async function guardar(fn) {
+  S.pendientes++; setSync('saving');
+  try { const r = await fn(); setSync(r && r.ok ? 'saved' : 'ok'); return r; }
+  catch (e) { setSync('error'); toast('Sin conexión. No se guardó el cambio.', 'bad'); return { ok: false, error: 'RED' }; }
+  finally { S.pendientes--; }
+}
+let syncTimer;
+function setSync(s) {
+  const el = $('#sync'); if (!el) return;
+  clearTimeout(syncTimer);
+  el.dataset.s = s;
+  el.querySelector('span').textContent = { ok: 'Al día', saving: 'Guardando…', saved: 'Guardado', error: 'Sin conexión' }[s];
+  if (s === 'saved') syncTimer = setTimeout(() => setSync('ok'), 2000);
+}
+function toast(msg, tipo = 'ok', accion) {
+  const el = document.createElement('div');
+  el.className = 'toast ' + tipo;
+  el.innerHTML = ico(tipo === 'bad' ? 'alert' : tipo === 'info' ? 'info' : 'check') + `<span>${esc(msg)}</span>` + (accion ? `<button>${esc(accion.txt)}</button>` : '');
+  if (accion) el.querySelector('button').onclick = () => { accion.fn(); el.remove(); };
+  $('#toasts').appendChild(el);
+  setTimeout(() => el.remove(), accion ? 6000 : 3200);
+}
+
+/* ════════════════════════════════════════════════════════════
+   PANTALLAS
+   ════════════════════════════════════════════════════════════ */
+function render() {
+  const root = $('#root');
+  if (!S.token || !S.user) { root.innerHTML = vistaLogin(); bindLogin(); return; }
+  root.innerHTML = `
+  <div class="app">
+    <nav class="rail" aria-label="Menú principal">
+      <div class="brand-mark" title="NEXO Workspace">N</div>
+      <button class="nav-item" data-nav="tablero" ${S.vista === 'tablero' ? 'aria-current="page"' : ''}>${ico('board')}Tablero</button>
+      <button class="nav-item" data-nav="historial" ${S.vista === 'historial' ? 'aria-current="page"' : ''}>${ico('history')}Historial</button>
+      <div class="rail-foot">
+        <span class="avatar lg" title="${esc(S.user.nombre)}">${esc(iniciales(S.user.nombre))}</span>
+        <button class="nav-item" data-action="salir" title="Cerrar sesión">${ico('logout')}Salir</button>
+      </div>
+    </nav>
+    <main class="main" id="main"></main>
+  </div>`;
+  root.querySelectorAll('[data-nav]').forEach(b => b.onclick = () => { S.vista = b.dataset.nav; render(); if (S.vista === 'historial') cargarHistorial(); });
+  root.querySelector('[data-action=salir]').onclick = salir;
+  renderMain();
+}
+function renderMain() {
+  const main = $('#main'); if (!main) return;
+  main.innerHTML = S.vista === 'tablero' ? vistaTablero() : vistaHistorial();
+  if (S.vista === 'tablero') bindTablero(); else bindHistorial();
+}
+
+/* ── Login ───────────────────────────────────────────────── */
+function vistaLogin() {
+  return `
+  <div class="login">
+    <form class="login-card" id="loginForm" novalidate>
+      <div class="brand"><span class="brand-mark">N</span>NEXO</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <h1>Entra a tu espacio de trabajo</h1>
+        <p>Usa tu usuario y PIN. Así el equipo sabe quién hizo cada cambio.</p>
+      </div>
+      <div class="field"><label class="label" for="lgU">Usuario</label>
+        <input class="input" id="lgU" autocomplete="username" autocapitalize="none" spellcheck="false" required></div>
+      <div class="field"><label class="label" for="lgP">PIN</label>
+        <input class="input" id="lgP" type="password" inputmode="numeric" autocomplete="current-password" required></div>
+      <p class="err-text" id="lgErr" hidden></p>
+      <button class="btn btn-primary" type="submit" id="lgBtn">Entrar</button>
+      ${!API_URL ? '<div class="demo-hint"><b>Modo demostración.</b> Prueba con <b>admin</b> / <b>1234</b>, <b>julio</b> / <b>1111</b> o <b>luis</b> / <b>2222</b>.</div>' : ''}
+    </form>
+  </div>`;
+}
+function bindLogin() {
+  $('#lgU').focus();
+  $('#loginForm').onsubmit = async e => {
+    e.preventDefault();
+    const u = $('#lgU').value.trim(), p = $('#lgP').value.trim(), err = $('#lgErr'), btn = $('#lgBtn');
+    if (!u || !p) { err.textContent = 'Escribe tu usuario y tu PIN.'; err.hidden = false; return; }
+    btn.disabled = true; btn.textContent = 'Entrando…'; err.hidden = true;
+    try {
+      const r = await api('login', { usuario: u, pin: p });
+      if (!r.ok) { err.textContent = r.mensaje; err.hidden = false; btn.disabled = false; btn.textContent = 'Entrar'; return; }
+      S.token = r.token; S.user = r.usuario;
+      try { localStorage.setItem('nexo_token', r.token); localStorage.setItem('nexo_user', JSON.stringify(r.usuario)); } catch (_) {}
+      await iniciar();
+      toast(`Hola, ${S.user.nombre.split(' ')[0]}`);
+    } catch (_) {
+      err.textContent = 'No hay conexión con el servidor. Revisa la URL o tu internet.'; err.hidden = false;
+      btn.disabled = false; btn.textContent = 'Entrar';
+    }
+  };
+}
+async function salir() { try { await api('logout'); } catch (_) {} salirLocal(); }
+function salirLocal() {
+  S.token = null; S.user = null; S.acts = []; S.edit = null; S.imp = null; S.semana = null;
+  S.f = { q: '', resp: '', tipo: '', frec: '', mias: false };
+  try { localStorage.removeItem('nexo_token'); localStorage.removeItem('nexo_user'); } catch (_) {}
+  cerrarCapas(); cerrarModal(); render();
+}
+
+/* ── Tablero ─────────────────────────────────────────────── */
+const semanas = () => [...new Set(S.acts.map(a => a.semana))].sort((a, b) => b - a);
+const deSemana = () => S.acts.filter(a => a.semana === S.semana);
+const esMia = a => norm(a.responsable) === norm(S.user.nombre);
+function filtradas() {
+  const q = norm(S.f.q);
+  return deSemana().filter(a =>
+    (!q || norm(`${a.id} ${a.tarea} ${a.responsable} ${a.observaciones}`).includes(q)) &&
+    (!S.f.resp || a.responsable === S.f.resp) &&
+    (!S.f.tipo || a.tipo === S.f.tipo) &&
+    (!S.f.frec || (a.frecuencia || 'Sin frecuencia') === S.f.frec) &&
+    (!S.f.mias || esMia(a))
+  );
+}
+const filtrosActivos = () => (S.f.resp ? 1 : 0) + (S.f.tipo ? 1 : 0) + (S.f.frec ? 1 : 0);
+const puedeEditar = () => S.user && S.user.rol !== 'lector';
+const unicos = campo => [...new Set(deSemana().map(a => a[campo] || (campo === 'frecuencia' ? 'Sin frecuencia' : '')).filter(Boolean))].sort();
+
+function vistaTablero() {
+  const base = S.f.mias ? deSemana().filter(esMia) : deSemana();
+  const lista = filtradas();
+  const total = base.length, fin = base.filter(a => a.estado === 'Terminado').length, ven = base.filter(vencida).length;
+  const nf = filtrosActivos();
+  const porEstado = e => lista.filter(a => a.estado === e).sort((a, b) => a.orden - b.orden);
+  const sems = semanas();
+  return `
+    <header class="topbar">
+      <div>
+        <h1>Plan de trabajo</h1>
+        <div class="stats">
+          <span><b>${total}</b> tarea${total === 1 ? '' : 's'}${S.f.mias ? ' tuyas' : ''}</span>
+          ${ven ? `<span class="alert"><b>${ven}</b> vencida${ven > 1 ? 's' : ''}</span>` : ''}
+          <span><b>${fin}</b> terminada${fin === 1 ? '' : 's'}</span>
+        </div>
+      </div>
+      <span class="sync" id="sync" data-s="ok"><i class="dot"></i><span>Al día</span></span>
+    </header>
+    ${!API_URL ? '<div class="demo-bar">Modo demostración: los datos se guardan solo en este navegador. Conecta tu Apps Script para compartirlos con el equipo.</div>' : ''}
+    <div class="toolbar">
+      <select class="select week" id="semSel" aria-label="Semana">
+        ${(sems.length ? sems : [S.semana]).map(s => `<option value="${s}" ${s === S.semana ? 'selected' : ''}>Semana ${s}</option>`).join('')}
+      </select>
+      <label class="search"><span class="sr">Buscar</span>${ico('search')}
+        <input class="input" id="q" placeholder="Buscar tarea, ID o responsable" value="${esc(S.f.q)}"><span class="kbd">/</span></label>
+      <button class="chip-toggle" id="btnMias" aria-pressed="${S.f.mias}" title="Solo mis tareas">${ico('user')}<span class="lbl">Solo mías</span></button>
+      <button class="chip-toggle" id="btnFiltros" aria-pressed="${S.verFiltros || nf > 0}" aria-expanded="${S.verFiltros}" title="Filtros">${ico('filter')}<span class="lbl">Filtros</span>${nf ? `<span class="count">${nf}</span>` : ''}</button>
+      <span class="spacer"></span>
+      ${puedeEditar() ? `<button class="btn btn-sec" id="btnNueva" title="Nueva tarea">${ico('plus')}<span class="lbl">Nueva</span></button>
+      <button class="btn btn-sec" id="btnImportar" title="Importar desde Excel">${ico('upload')}<span class="lbl">Importar</span></button>` : ''}
+      <button class="btn btn-primary" id="btnCopiar">${ico('copy')}Copiar avance</button>
+    </div>
+    <div class="filters" ${S.verFiltros ? '' : 'hidden'}>
+      <div class="field"><label class="label" for="fResp">Responsable</label>
+        <select class="select" id="fResp"><option value="">Todos</option>${unicos('responsable').map(r => `<option ${r === S.f.resp ? 'selected' : ''}>${esc(r)}</option>`).join('')}</select></div>
+      <div class="field"><label class="label" for="fTipo">Tipo de actividad</label>
+        <select class="select" id="fTipo"><option value="">Todos</option>${unicos('tipo').map(r => `<option ${r === S.f.tipo ? 'selected' : ''}>${esc(r)}</option>`).join('')}</select></div>
+      <div class="field"><label class="label" for="fFrec">Frecuencia</label>
+        <select class="select" id="fFrec"><option value="">Todas</option>${unicos('frecuencia').map(r => `<option ${r === S.f.frec ? 'selected' : ''}>${esc(r)}</option>`).join('')}</select></div>
+      ${nf ? '<button class="btn btn-ghost" id="btnLimpiar">Limpiar filtros</button>' : ''}
+    </div>
+    <div class="board-wrap">
+      ${!deSemana().length ? `<div class="table-wrap"><div class="empty">
+          <p style="margin-bottom:16px">Aún no hay tareas en la semana ${S.semana}.</p>
+          ${puedeEditar() ? `<button class="btn btn-primary" id="btnImportar2">${ico('upload')}Importar desde Excel</button>` : ''}
+        </div></div>` : `
+      <div class="seg col-tabs" role="tablist">
+        ${ESTADOS.map(e => `<button data-tab="${e}" aria-pressed="${S.colMovil === e}">${e} · ${porEstado(e).length}</button>`).join('')}
+      </div>
+      <div class="board" id="board">
+        ${ESTADOS.map(e => {
+          const cs = porEstado(e);
+          return `<section class="col ${S.colMovil === e ? 'active' : ''}" data-col="${e}" aria-label="${e}">
+            <div class="col-head"><i class="dot" data-e="${e}"></i>${e}<span class="badge">${cs.length}</span></div>
+            <div class="cards">${cs.length ? cs.map(tarjeta).join('') : `<div class="empty-col">${S.f.q || nf || S.f.mias ? 'Nada con estos filtros' : 'Sin tareas'}</div>`}</div>
+          </section>`;
+        }).join('')}
+      </div>`}
+    </div>`;
+}
+/** La tarjeta muestra solo lo necesario para el día a día; el resto vive en el panel. */
+function tarjeta(a) {
+  const late = vencida(a);
+  const etiqueta = a.frecuencia || a.tipo;
+  const pct = Number(a.pctAcum || 0);
+  return `<div class="card ${a.estado === 'Terminado' ? 'done' : ''}" role="button" tabindex="0" data-clave="${esc(a.clave)}" draggable="${puedeEditar()}">
+    <div class="card-top"><span class="mono">${esc(a.id)}</span>${etiqueta ? `<span class="badge">${esc(etiqueta)}</span>` : ''}</div>
+    <div class="card-title">${esc(a.tarea)}</div>
+    ${pct > 0 ? `<div class="progress"><span class="progress-bar"><i style="width:${Math.min(pct, 100)}%"></i></span>${esc(pctTxt(a.pctAcum))}</div>` : ''}
+    <div class="card-foot">
+      <span class="who">${a.responsable ? `<span class="avatar">${esc(iniciales(a.responsable))}</span><span>${esc(a.responsable)}</span>` : '<span>Sin responsable</span>'}</span>
+      ${a.fecha ? `<span class="due ${late ? 'late' : ''}">${ico('cal')}${late ? 'Vencida · ' : ''}${fechaCorta(a.fecha)}</span>` : ''}
+    </div>
+  </div>`;
+}
+
+function bindTablero() {
+  const q = $('#q');
+  q.oninput = () => { S.f.q = q.value; repintarTablero(); };
+  $('#semSel').onchange = e => { S.semana = Number(e.target.value); repintarTablero(); };
+  $('#btnMias').onclick = () => { S.f.mias = !S.f.mias; repintarTablero(); };
+  $('#btnFiltros').onclick = () => { S.verFiltros = !S.verFiltros; repintarTablero(); };
+  [['#fResp', 'resp'], ['#fTipo', 'tipo'], ['#fFrec', 'frec']].forEach(([sel, k]) => { const el = $(sel); if (el) el.onchange = () => { S.f[k] = el.value; repintarTablero(); }; });
+  const lim = $('#btnLimpiar'); if (lim) lim.onclick = () => { S.f.resp = ''; S.f.tipo = ''; S.f.frec = ''; repintarTablero(); };
+  $('#btnCopiar').onclick = abrirExportar;
+  ['#btnImportar', '#btnImportar2'].forEach(s => { const b = $(s); if (b) b.onclick = abrirImportar; });
+  const bn = $('#btnNueva'); if (bn) bn.onclick = () => abrirEditor(null);
+  document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { S.colMovil = b.dataset.tab; repintarTablero(); });
+
+  const board = $('#board'); if (!board) return;
+  board.onclick = e => { const c = e.target.closest('.card'); if (c) abrirEditor(c.dataset.clave); };
+  board.onkeydown = e => { const c = e.target.closest('.card'); if (c && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); abrirEditor(c.dataset.clave); } };
+  board.addEventListener('dragstart', e => { const c = e.target.closest('.card'); if (!c) return; e.dataTransfer.setData('text/plain', c.dataset.clave); e.dataTransfer.effectAllowed = 'move'; c.classList.add('dragging'); });
+  board.addEventListener('dragend', e => { const c = e.target.closest('.card'); if (c) c.classList.remove('dragging'); board.querySelectorAll('.col.drop').forEach(x => x.classList.remove('drop')); });
+  board.querySelectorAll('.col').forEach(col => {
+    col.addEventListener('dragover', e => { e.preventDefault(); col.classList.add('drop'); });
+    col.addEventListener('dragleave', e => { if (!col.contains(e.relatedTarget)) col.classList.remove('drop'); });
+    col.addEventListener('drop', e => { e.preventDefault(); col.classList.remove('drop'); const k = e.dataTransfer.getData('text/plain'); if (k) mover(k, col.dataset.col); });
+  });
+}
+function repintarTablero() {
+  const enfocado = document.activeElement && document.activeElement.id;
+  const pos = enfocado === 'q' ? $('#q').selectionStart : null;
+  const syncEl = $('#sync'), syncS = syncEl ? syncEl.dataset.s : 'ok';
+  renderMain();
+  if (syncS !== 'ok') setSync(syncS);
+  if (enfocado && $('#' + enfocado)) { const el = $('#' + enfocado); el.focus(); if (pos != null) el.setSelectionRange(pos, pos); }
+}
+async function mover(k, estado) {
+  const a = S.acts.find(x => x.clave === k);
+  if (!a || a.estado === estado) return;
+  const antes = a.estado;
+  a.estado = estado; repintarTablero(); marcarTarjeta(k, 'saving');
+  const r = await guardar(() => api('actualizar', { clave: k, datos: { estado }, version: a.version }));
+  if (r.ok) { reemplazar(r.actividad); S.rev = r.rev || S.rev; repintarTablero(); marcarTarjeta(k, 'flash'); }
+  else {
+    if (r.actividad) reemplazar(r.actividad); else if (r.error === 'NOEXISTE') quitar(k); else a.estado = antes;
+    repintarTablero(); if (r.mensaje) toast(r.mensaje, 'bad');
+  }
+}
+function marcarTarjeta(k, cls) {
+  const el = document.querySelector(`.card[data-clave="${CSS.escape(k)}"]`);
+  if (!el) return;
+  el.classList.add(cls);
+  if (cls === 'flash') setTimeout(() => el.classList.remove('flash'), 900);
+}
+const reemplazar = act => { const i = S.acts.findIndex(x => x.clave === act.clave); if (i >= 0) S.acts[i] = act; else S.acts.push(act); };
+const quitar = k => { S.acts = S.acts.filter(x => x.clave !== k); };
+
+/* ── Copiar avance para Excel (por bloques) ──────────────── */
+function valorExcel(a, k) {
+  if (k === 'fecha') return fechaExcel(a.fecha);
+  if (k === 'pctDiario' || k === 'pctAcum') return pctTxt(a[k]);
+  return a[k] ?? '';
+}
+function aTSV(lista, campos) {
+  const celda = v => { v = String(v ?? ''); return /[\t\n\r"]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+  return lista.map(a => campos.map(k => celda(valorExcel(a, k))).join('\t')).join('\r\n');
+}
+async function copiarTexto(txt) {
+  try { await navigator.clipboard.writeText(txt); return true; } catch (_) {}
+  const ta = document.createElement('textarea');
+  ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  let ok = false; try { ok = document.execCommand('copy'); } catch (_) {}
+  ta.remove(); return ok;
+}
+function abrirExportar() {
+  const lista = deSemana().slice().sort((a, b) => a.orden - b.orden);
+  if (!lista.length) { toast('No hay tareas en esta semana.', 'info'); return; }
+  const primera = lista[0];
+  abrirModal(`<div class="modal-box sm" role="dialog" aria-modal="true" aria-labelledby="exT" style="width:min(560px,100%)">
+    <div class="modal-head">
+      <div class="modal-head-row"><h2 id="exT">Reportar avance en Excel</h2><button class="btn btn-ghost btn-icon" data-close aria-label="Cerrar">${ico('x')}</button></div>
+      <p class="hint">Semana ${S.semana} · ${lista.length} tareas en el mismo orden en que las importaste. Se copian todas, aunque tengas filtros activos.</p>
+    </div>
+    <div class="modal-body">
+      ${BLOQUES.map((b, i) => `<div class="export-opt ${i === 0 ? 'main' : ''}">
+        <div class="txt"><span class="letras">Columnas ${b.letras}</span><b>${b.titulo}</b><span class="hint">${b.detalle}</span>
+          <span class="hint">Pega en la <b>${b.celda}</b> de la fila de <b>${esc(primera.id)}</b>.</span></div>
+        <button class="btn ${i === 0 ? 'btn-primary' : 'btn-sec'}" data-bloque="${i}">${ico('copy')}Copiar</button>
+      </div>`).join('')}
+    </div>
+    <div class="modal-foot"><button class="btn btn-ghost" data-close>Listo</button></div>
+  </div>`);
+  document.querySelectorAll('[data-bloque]').forEach(btn => btn.onclick = async () => {
+    const b = BLOQUES[+btn.dataset.bloque];
+    const txt = aTSV(lista, b.campos);
+    if (await copiarTexto(txt)) {
+      btn.innerHTML = ico('check') + 'Copiado';
+      toast(`Columnas ${b.letras} copiadas. Pégalas en Excel con Ctrl+V.`);
+    } else mostrarTextoManual(txt);
+  });
+}
+function mostrarTextoManual(txt) {
+  abrirModal(`<div class="modal-box sm" role="dialog" aria-modal="true" aria-labelledby="mt">
+    <div class="modal-head"><h2 id="mt">Copia este texto</h2><p class="hint">Tu navegador no permitió copiar automáticamente. Selecciona todo y copia con Ctrl+C.</p></div>
+    <div class="modal-body"><textarea class="textarea paste" id="manualTxt" readonly>${esc(txt)}</textarea></div>
+    <div class="modal-foot"><button class="btn btn-primary" data-close>Listo</button></div></div>`);
+  const t = $('#manualTxt'); t.focus(); t.select();
+}
+
+/* ── Panel de la tarea ───────────────────────────────────── */
+function abrirEditor(k) {
+  const a = k ? S.acts.find(x => x.clave === k) : null;
+  if (k && !a) return;
+  const vacio = { semana: S.semana, id: '', tarea: '', tipo: 'Operativa', prealineacion: '', responsable: S.user.rol === 'admin' ? '' : S.user.nombre, fecha: '', frecuencia: '', estado: ESTADOS[0], resultado: '', pctDiario: '', pctAcum: '', observaciones: '', meta: '' };
+  const base = a ? { ...a } : vacio;
+  S.edit = { clave: a ? a.clave : null, original: base, version: a ? a.version : null };
+  pintarEditor(base);
+}
+const lista = (id, vals) => `<datalist id="${id}">${vals.map(v => `<option value="${esc(v)}">`).join('')}</datalist>`;
+function pintarEditor(v) {
+  cerrarCapas();
+  const nuevo = !S.edit.clave, ro = !puedeEditar(), dis = ro ? 'disabled' : '';
+  const responsables = [...new Set(S.usuarios.map(u => u.nombre).concat(S.acts.map(a => a.responsable)).filter(Boolean))].sort();
+  const wrap = document.createElement('div');
+  wrap.id = 'capa';
+  wrap.innerHTML = `
+  <div class="backdrop" data-close></div>
+  <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="edT">
+    <div class="drawer-head">
+      <h2 id="edT">${nuevo ? 'Nueva tarea' : `<span class="mono" style="font-size:inherit">${esc(v.id)}</span> <span class="hint" style="font-weight:500">· Semana ${v.semana}</span>`}</h2>
+      <button class="btn btn-ghost btn-icon" data-close aria-label="Cerrar">${ico('x')}</button>
+    </div>
+    <form class="drawer-body" id="edForm" novalidate>
+      ${nuevo ? '' : `<div style="display:flex;flex-direction:column;gap:8px">
+        <p class="tarea-txt">${esc(v.tarea)}</p>
+        ${v.meta ? `<p class="meta-line"><span class="label">Meta</span><span>${esc(v.meta)}</span></p>` : ''}
+      </div>`}
+      <div class="field"><span class="label">Estatus</span>
+        <div class="seg" data-seg="estado">${ESTADOS.map(e => `<button type="button" data-val="${e}" aria-pressed="${v.estado === e}" ${dis}>${e}</button>`).join('')}</div></div>
+      <div class="row2">
+        <div class="field"><label class="label" for="edPD">% Diario</label><span class="pct"><input class="input" id="edPD" data-k="pctDiario" inputmode="decimal" value="${esc(v.pctDiario)}" placeholder="0" ${dis}></span></div>
+        <div class="field"><label class="label" for="edPA">% Acumulado</label><span class="pct"><input class="input" id="edPA" data-k="pctAcum" inputmode="decimal" value="${esc(v.pctAcum)}" placeholder="0" ${dis}></span></div>
+      </div>
+      <div class="field"><label class="label" for="edRes">Resultado</label>
+        <textarea class="textarea" id="edRes" data-k="resultado" rows="2" style="min-height:64px" placeholder="Qué se logró" ${dis}>${esc(v.resultado)}</textarea></div>
+      <div class="field"><label class="label" for="edObs">Observaciones</label>
+        <textarea class="textarea" id="edObs" data-k="observaciones" placeholder="Notas, bloqueos o aclaraciones" ${dis}>${esc(v.observaciones)}</textarea></div>
+      <span class="err-text" id="edErr" hidden></span>
+
+      <details class="plan" ${nuevo ? 'open' : ''}>
+        <summary>${ico('chevron')}Datos del plan</summary>
+        <div class="plan-body">
+          <div class="field"><label class="label" for="edTarea">Tarea</label>
+            <textarea class="textarea" id="edTarea" data-k="tarea" rows="2" style="min-height:64px" placeholder="¿Qué hay que hacer?" ${dis}>${esc(v.tarea)}</textarea></div>
+          <div class="row2">
+            <div class="field"><label class="label" for="edResp">Responsable</label>
+              <input class="input" id="edResp" data-k="responsable" list="dlResp" value="${esc(v.responsable)}" ${dis}>${lista('dlResp', responsables)}</div>
+            <div class="field"><label class="label" for="edFecha">Fecha compromiso</label>
+              <input class="input" type="date" id="edFecha" data-k="fecha" value="${esc(v.fecha)}" ${dis}></div>
+          </div>
+          <div class="row2">
+            <div class="field"><label class="label" for="edFrec">Frecuencia</label>
+              <input class="input" id="edFrec" data-k="frecuencia" list="dlFrec" value="${esc(v.frecuencia)}" ${dis}>${lista('dlFrec', SUGERENCIAS.frecuencia)}</div>
+            <div class="field"><label class="label" for="edTipo">Tipo de actividad</label>
+              <input class="input" id="edTipo" data-k="tipo" list="dlTipo" value="${esc(v.tipo)}" ${dis}>${lista('dlTipo', SUGERENCIAS.tipo)}</div>
+          </div>
+          <div class="row2">
+            <div class="field"><label class="label" for="edPre">Estatus prealineación</label>
+              <input class="input" id="edPre" data-k="prealineacion" list="dlPre" value="${esc(v.prealineacion)}" ${dis}>${lista('dlPre', SUGERENCIAS.prealineacion)}</div>
+            ${nuevo ? `<div class="field"><label class="label" for="edSem">Número de semana</label>
+              <input class="input" id="edSem" data-k="semana" inputmode="numeric" value="${esc(v.semana)}"></div>` : '<div></div>'}
+          </div>
+          <div class="field"><label class="label" for="edMeta">Meta</label>
+            <input class="input" id="edMeta" data-k="meta" value="${esc(v.meta)}" ${dis}></div>
+          ${nuevo ? `<div class="field"><label class="label" for="edId">ID <span style="font-weight:400;color:var(--muted)">· opcional</span></label>
+            <input class="input" id="edId" data-k="id" maxlength="40" placeholder="Se asigna solo (${ID_PREFIJO}47…)"></div>` : ''}
+        </div>
+      </details>
+      ${nuevo ? '' : `
+      <div class="meta">
+        <span>Creada por <b>${esc(v.creadoPor || '—')}</b> · ${esc(v.creado || '')}</span>
+        <span>Último cambio por <b>${esc(v.modificadoPor || '—')}</b> · ${esc(v.modificado || '')}</span>
+      </div>
+      <div class="field"><button type="button" class="link" id="verLog">${ico('history')}Ver historial de esta tarea</button><div id="miniLog"></div></div>`}
+    </form>
+    <div class="drawer-foot">
+      ${!nuevo && !ro ? '<button class="btn btn-danger" id="edDel" type="button">Eliminar</button>' : ''}
+      <span class="spacer"></span>
+      <button class="btn btn-ghost" data-close type="button">${ro ? 'Cerrar' : 'Cancelar'}</button>
+      ${ro ? '' : `<button class="btn btn-primary" id="edSave" type="button" ${nuevo ? '' : 'disabled'}>${nuevo ? 'Crear tarea' : 'Guardar cambios'}</button>`}
+    </div>
+  </aside>`;
+  document.body.appendChild(wrap);
+  wrap.querySelectorAll('[data-close]').forEach(b => b.onclick = cerrarEditor);
+  wrap.querySelectorAll('.seg').forEach(seg => seg.onclick = e => {
+    const b = e.target.closest('button'); if (!b || b.disabled) return;
+    seg.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    revisarCambios();
+  });
+  const form = $('#edForm');
+  form.oninput = revisarCambios;
+  form.onsubmit = e => { e.preventDefault(); guardarEditor(); };
+  form.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT') { e.preventDefault(); guardarEditor(); } });
+  const save = $('#edSave'); if (save) save.onclick = guardarEditor;
+  const del = $('#edDel'); if (del) del.onclick = confirmarEliminar;
+  const vl = $('#verLog'); if (vl) vl.onclick = cargarMiniLog;
+  setTimeout(() => { const t = nuevo ? $('#edTarea') : null; if (t) t.focus(); }, 0);
+}
+function leerEditor() {
+  const o = { ...S.edit.original };
+  document.querySelectorAll('#edForm [data-k]').forEach(el => { o[el.dataset.k] = el.value.trim(); });
+  const b = document.querySelector('[data-seg="estado"] [aria-pressed="true"]');
+  if (b) o.estado = b.dataset.val;
+  return o;
+}
+function editorSucio() {
+  if (!S.edit || !$('#edForm')) return false;
+  const v = leerEditor(), o = S.edit.original;
+  return CAMPOS_EDIT.concat(['id', 'semana']).some(k => String(v[k] ?? '') !== String(o[k] ?? ''));
+}
+function revisarCambios() {
+  const b = $('#edSave'); if (!b) return;
+  if (S.edit.clave) b.disabled = !editorSucio();
+  $('#edErr').hidden = true;
+}
+async function guardarEditor() {
+  const b = $('#edSave'); if (!b || b.disabled) return;
+  const d = limpiar(leerEditor());
+  if (d.error) {
+    const e = $('#edErr'); e.textContent = d.mensaje; e.hidden = false;
+    if (/tarea|semana/i.test(d.mensaje)) $('details.plan').open = true;
+    return;
+  }
+  b.disabled = true; b.textContent = 'Guardando…';
+  const r = S.edit.clave
+    ? await guardar(() => api('actualizar', { clave: S.edit.clave, datos: d, version: S.edit.version }))
+    : await guardar(() => api('crear', { datos: d }));
+  if (r.ok) {
+    reemplazar(r.actividad); S.rev = r.rev || S.rev;
+    const k = r.actividad.clave, nuevo = !S.edit.clave;
+    S.semana = r.actividad.semana;
+    S.edit = null; cerrarCapas(); repintarTablero(); marcarTarjeta(k, 'flash');
+    toast(nuevo ? `Tarea ${r.actividad.id} creada` : r.sinCambios ? 'Sin cambios' : 'Cambios guardados');
+  } else if (r.error === 'CONFLICTO' && r.actividad) {
+    reemplazar(r.actividad); repintarTablero();
+    S.edit = { clave: r.actividad.clave, original: { ...r.actividad }, version: r.actividad.version };
+    pintarEditor(r.actividad); toast(r.mensaje, 'info');
+  } else {
+    b.disabled = false; b.textContent = S.edit.clave ? 'Guardar cambios' : 'Crear tarea';
+    if (r.error === 'NOEXISTE') { quitar(S.edit.clave); cerrarEditor(true); repintarTablero(); }
+    if (r.mensaje) toast(r.mensaje, 'bad');
+  }
+}
+function cerrarEditor(forzar) {
+  if (forzar !== true && editorSucio() && !confirm('Tienes cambios sin guardar. ¿Cerrar de todos modos?')) return;
+  S.edit = null; cerrarCapas();
+}
+function confirmarEliminar() {
+  const a = S.acts.find(x => x.clave === S.edit.clave); if (!a) return;
+  abrirModal(`<div class="modal-box sm" role="alertdialog" aria-modal="true" aria-labelledby="dt">
+    <div class="modal-head"><h2 id="dt">¿Eliminar esta tarea?</h2>
+      <p class="hint"><b>${esc(a.id)} · ${esc(a.tarea)}</b><br>Se quitará del tablero para todos. Queda registrada en el historial.</p></div>
+    <div class="modal-foot"><button class="btn btn-ghost" data-close>Cancelar</button><button class="btn btn-primary" id="delOk" style="background:#DC2626">Eliminar</button></div></div>`, true);
+  $('#delOk').onclick = async () => {
+    const k = a.clave;
+    cerrarModal(); S.edit = null; cerrarCapas();
+    quitar(k); repintarTablero();
+    const r = await guardar(() => api('eliminar', { clave: k }));
+    if (r.ok) { S.rev = r.rev || S.rev; toast(`Tarea ${a.id} eliminada`); }
+    else { S.acts.push(a); repintarTablero(); if (r.mensaje) toast(r.mensaje, 'bad'); }
+  };
+}
+async function cargarMiniLog() {
+  const box = $('#miniLog'), btn = $('#verLog');
+  btn.hidden = true; box.innerHTML = '<p class="hint">Cargando…</p>';
+  try {
+    const r = await api('historial', { clave: S.edit.clave, limite: 50 });
+    if (!r.ok) throw 0;
+    box.innerHTML = r.registros.length ? `<ul class="mini-log">${r.registros.map(x => `
+      <li><span class="avatar">${esc(iniciales(x.usuario))}</span><div><div><b>${esc(x.usuario)}</b> ${esc(textoAccion(x))}</div><div class="t">${esc(x.fecha)}</div></div></li>`).join('')}</ul>`
+      : '<p class="hint">Aún no hay movimientos registrados.</p>';
+  } catch (_) { box.innerHTML = '<p class="err-text">No se pudo cargar el historial.</p>'; btn.hidden = false; }
+}
+const fmtValor = (v, campo) => campo === 'Fecha compromiso' && /^\d{4}-/.test(v) ? fechaCorta(v) : /^%/.test(campo || '') && v !== '' ? v + '%' : v;
+function textoAccion(x) {
+  if (x.campo) return `cambió ${x.campo.toLowerCase()}: ${fmtValor(x.antes, x.campo) || 'vacío'} → ${fmtValor(x.despues, x.campo) || 'vacío'}`;
+  return { 'Creó': 'creó la tarea', 'Importó': 'la importó desde Excel', 'Eliminó': 'la eliminó' }[x.accion] || x.accion.toLowerCase();
+}
+
+/* ── Capas y modales ─────────────────────────────────────── */
+function cerrarCapas() { const c = $('#capa'); if (c) c.remove(); }
+function abrirModal(html, encima) {
+  cerrarModal();
+  const m = document.createElement('div');
+  m.id = 'modal'; m.className = 'modal'; if (encima) m.style.zIndex = 35;
+  m.innerHTML = `<div class="backdrop" data-close style="z-index:auto"></div>${html}`;
+  document.body.appendChild(m);
+  m.addEventListener('click', e => { if (e.target.closest('[data-close]')) { e.preventDefault(); if (m.dataset.imp) cerrarImportar(); else cerrarModal(); } });
+  return m;
+}
+function cerrarModal() { const m = $('#modal'); if (m) m.remove(); }
+
+/* ── Importar desde Excel (3 pasos) ──────────────────────── */
+function abrirImportar() { S.imp = { paso: 1, texto: '', filas: [], soloProblemas: false, resultado: null }; pintarImportar(); }
+function cerrarImportar() {
+  if (S.imp && S.imp.paso === 2 && !confirm('¿Salir sin importar?')) return;
+  S.imp = null; cerrarModal();
+}
+/* Se envían también las filas sin cambios: el orden de lo pegado define el orden de la semana. */
+const impValidas = () => S.imp.filas.filter(x => x.tipo !== 'error');
+function pintarImportar() {
+  const p = S.imp.paso, n = p === 2 ? impValidas().length : 0;
+  const titulos = { 1: 'Pega tu plan de trabajo', 2: 'Revisa antes de importar', 3: 'Importación terminada' };
+  const m = abrirModal(`<div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="impT">
+    <div class="modal-head">
+      <div class="steps"><span class="hint">Paso ${p} de 3</span><div class="steps-bar">${[1, 2, 3].map(i => `<i class="${i <= p ? 'on' : ''}"></i>`).join('')}</div></div>
+      <div class="modal-head-row"><h2 id="impT">${titulos[p]}</h2>
+        ${p < 3 ? `<button class="btn btn-ghost btn-icon" data-close aria-label="Cerrar">${ico('x')}</button>` : ''}</div>
+    </div>
+    <div class="modal-body">${p === 1 ? impPaso1() : p === 2 ? impPaso2() : impPaso3()}</div>
+    <div class="modal-foot">${p === 1 ? `<button class="btn btn-ghost" data-close>Cancelar</button><button class="btn btn-primary" id="impNext" ${S.imp.texto.trim() ? '' : 'disabled'}>Revisar ${ico('chevron')}</button>`
+      : p === 2 ? `<button class="btn btn-ghost" id="impBack">Atrás</button><button class="btn btn-primary" id="impGo" ${n ? '' : 'disabled'}>Importar ${n} tarea${n === 1 ? '' : 's'}</button>`
+      : `<button class="btn btn-primary" id="impDone">Ver tablero</button>`}</div>
+  </div>`);
+  m.dataset.imp = '1';
+  bindImportar();
+}
+function impPaso1() {
+  return `
+    <p>Selecciona en Excel las filas de la semana (de la columna <b>A</b> a la <b>T</b>) y pégalas aquí con <b>Ctrl+V</b>.</p>
+    <div class="cols-chips"><span class="hint">Se leen:</span>${CAMPOS_PLAN.map(c => `<span class="badge">${NOMBRES[c]}</span>`).join('')}</div>
+    <textarea class="textarea paste" id="impTxt" placeholder="44	MKT1	Reportar los pedidos del día…	Operativa		Julio Chávez		Diaria	En proceso		0%	0%	…" spellcheck="false">${esc(S.imp.texto)}</textarea>
+    <label class="link" style="cursor:pointer;align-self:flex-start">${ico('file')}O sube un archivo .csv<input type="file" id="impFile" accept=".csv,.tsv,.txt,text/csv" hidden></label>
+    <p class="hint">Si la semana y el ID ya existen, la tarea se actualiza (las celdas vacías no borran lo que ya tiene). Los encabezados y las columnas ocultas D–I se ignoran solos.</p>`;
+}
+function impPaso2() {
+  const f = S.imp.filas;
+  const c = t => f.filter(x => x.tipo === t).length;
+  const nuevas = c('nueva'), act = c('actualiza'), err = c('error'), iguales = c('igual');
+  const avisos = f.filter(x => x.avisos.length && x.tipo !== 'error').length;
+  const sems = [...new Set(f.filter(x => x.tipo !== 'error').map(x => x.datos.semana))];
+  const lista = S.imp.soloProblemas ? f.filter(x => x.tipo === 'error' || x.avisos.length) : f;
+  return `
+    <div class="summary">
+      ${sems.length ? `<span class="badge">Semana ${sems.join(', ')}</span>` : ''}
+      ${nuevas ? `<span class="badge ok">${nuevas} nueva${nuevas > 1 ? 's' : ''}</span>` : ''}
+      ${act ? `<span class="badge info">${act} se actualizará${act > 1 ? 'n' : ''}</span>` : ''}
+      ${iguales ? `<span class="badge">${iguales} sin cambios</span>` : ''}
+      ${avisos ? `<span class="badge warn">${avisos} con aviso</span>` : ''}
+      ${err ? `<span class="badge bad">${err} con error · no se importará${err > 1 ? 'n' : ''}</span>` : ''}
+      ${err || avisos ? `<span class="spacer"></span><button class="chip-toggle" id="impFiltro" aria-pressed="${S.imp.soloProblemas}" style="height:32px">Ver solo problemas</button>` : ''}
+    </div>
+    <div class="table-wrap"><table class="preview">
+      <thead><tr><th></th><th>ID</th><th>Tarea</th><th>Responsable</th><th>Estatus</th><th>Fecha</th><th>% Acum.</th></tr></thead>
+      <tbody>${lista.map(x => {
+        const d = x.datos, e = x.tipo === 'error';
+        const etq = e ? '<span class="badge bad">Error</span>' : x.tipo === 'actualiza' ? '<span class="badge info">Actualiza</span>' : x.tipo === 'igual' ? '<span class="badge">Igual</span>' : '<span class="badge ok">Nueva</span>';
+        const msgs = x.errores.map(m => `<span class="msg bad">${esc(m)}</span>`).join('') + x.avisos.map(m => `<span class="msg warn">${esc(m)}</span>`).join('');
+        return `<tr class="${e ? 'has-err' : ''}"><td>${etq}</td><td class="mono">${esc(d.id || 'Nuevo')}</td>
+          <td>${esc(d.tarea || '—')}${msgs}</td><td>${esc(d.responsable)}</td><td>${esc(d.estado)}</td>
+          <td>${e ? esc(x.crudo.fecha) : esc(fechaCorta(d.fecha))}</td><td>${e ? esc(x.crudo.pctAcum) : esc(pctTxt(d.pctAcum))}</td></tr>`;
+      }).join('')}</tbody></table></div>`;
+}
+function impPaso3() {
+  const r = S.imp.resultado;
+  const partes = [r.nuevas ? `${r.nuevas} creada${r.nuevas > 1 ? 's' : ''}` : '', r.actualizadas ? `${r.actualizadas} actualizada${r.actualizadas > 1 ? 's' : ''}` : ''].filter(Boolean);
+  return `<div class="result">
+    <div class="result-icon">${ico('check')}</div>
+    <h3>${partes.length ? partes.join(' y ') : 'No hubo cambios'}</h3>
+    <p class="hint">${r.sinCambio ? `${r.sinCambio} fila${r.sinCambio > 1 ? 's' : ''} ya estaba${r.sinCambio > 1 ? 'n' : ''} igual. ` : ''}Quedó registrado a tu nombre en el historial.</p>
+    ${r.errores && r.errores.length ? `<p class="err-text">${r.errores.length} fila(s) rechazadas por el servidor: ${esc(r.errores.map(e => 'fila ' + e.fila + ' — ' + e.mensaje).join('; '))}</p>` : ''}
+  </div>`;
+}
+function bindImportar() {
+  const p = S.imp.paso;
+  if (p === 1) {
+    const t = $('#impTxt'), next = $('#impNext');
+    t.focus();
+    t.oninput = () => { S.imp.texto = t.value; next.disabled = !t.value.trim(); };
+    next.onclick = () => {
+      const filas = analizarPegado(S.imp.texto);
+      if (!filas.length) { toast('No encontramos tareas en lo que pegaste.', 'bad'); return; }
+      S.imp.filas = filas; S.imp.paso = 2; pintarImportar();
+    };
+    $('#impFile').onchange = e => {
+      const file = e.target.files[0]; if (!file) return;
+      const rd = new FileReader();
+      rd.onload = () => { S.imp.texto = String(rd.result).replace(/^﻿/, ''); t.value = S.imp.texto; next.disabled = !S.imp.texto.trim(); toast(`Archivo "${file.name}" cargado`); };
+      rd.readAsText(file, 'utf-8');
+    };
+  } else if (p === 2) {
+    $('#impBack').onclick = () => { S.imp.paso = 1; pintarImportar(); };
+    const fl = $('#impFiltro'); if (fl) fl.onclick = () => { S.imp.soloProblemas = !S.imp.soloProblemas; pintarImportar(); };
+    const go = $('#impGo');
+    go.onclick = async () => {
+      go.disabled = true; go.textContent = 'Importando…';
+      const filas = impValidas().map(x => x.datos);
+      const r = await guardar(() => api('importar', { filas }));
+      if (!r.ok) { go.disabled = false; go.textContent = 'Reintentar'; if (r.mensaje) toast(r.mensaje, 'bad'); return; }
+      const sem = filas[0] && filas[0].semana;
+      await recargar();
+      if (sem) S.semana = Number(sem);
+      S.imp.resultado = r; S.imp.paso = 3; pintarImportar(); repintarTablero();
+    };
+  } else {
+    $('#impDone').onclick = () => { S.imp = null; cerrarModal(); };
+  }
+}
+
+/** Lee texto pegado de Excel (tabuladores) o CSV, respetando comillas y saltos de línea dentro de celdas. */
+function parseDelim(text, delim) {
+  const rows = []; let row = [], cell = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) {
+      if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; }
+      else cell += c;
+    } else if (c === '"' && cell === '') q = true;
+    else if (c === delim) { row.push(cell); cell = ''; }
+    else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+    else cell += c;
+  }
+  if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
+  return rows.filter(r => r.some(c => c.trim() !== ''));
+}
+function analizarPegado(texto) {
+  const t = texto.replace(/^﻿/, '');
+  const primera = t.split(/\r?\n/)[0] || '';
+  const delim = primera.includes('\t') ? '\t' : (primera.split(';').length > primera.split(',').length ? ';' : ',');
+  const rows = parseDelim(t, delim);
+  const porNombre = {};
+  S.usuarios.forEach(u => { porNombre[norm(u.nombre)] = u.nombre; porNombre[norm(u.usuario)] = u.nombre; });
+  const existentes = Object.fromEntries(S.acts.map(a => [a.clave.toLowerCase(), a]));
+  const vistos = {}, out = [];
+
+  rows.forEach(r => {
+    // Si se copiaron también las columnas ocultas D–I, se quitan.
+    if (r.length >= 20) r = r.filter((_, i) => !OCULTAS.includes(i));
+    const crudo = {}; CAMPOS_PLAN.forEach((k, i) => { crudo[k] = String(r[i] ?? '').trim(); });
+    // Se saltan encabezados y filas vacías.
+    if (norm(crudo.id) === 'id' || norm(crudo.tarea) === 'tareas' || norm(crudo.semana).startsWith('numero') || (!crudo.id && !crudo.tarea)) return;
+    const errores = [], avisos = [];
+    const sem = Number(crudo.semana) || semanaISO();
+    const previa = crudo.id && existentes[clave(sem, crudo.id).toLowerCase()];
+    const d = limpiar(previa ? conservarVacios(previa, crudo) : crudo);
+    let datos;
+    if (d.error) { errores.push(d.mensaje); datos = { ...crudo }; }
+    else {
+      datos = d;
+      if (d.responsable) {
+        const n = porNombre[norm(d.responsable)];
+        if (n) d.responsable = n;
+        else if (norm(d.responsable) !== 'por definir') avisos.push(`"${d.responsable}" no está registrado como usuario; no podrá verla en "Solo mías".`);
+      }
+    }
+    const k = datos.id ? clave(datos.semana || sem, datos.id).toLowerCase() : '';
+    if (k) { if (vistos[k]) errores.push('Este ID está repetido en lo que pegaste.'); vistos[k] = true; }
+    let tipo = errores.length ? 'error' : (k && existentes[k] ? 'actualiza' : 'nueva');
+    if (tipo === 'actualiza' && CAMPOS_EDIT.every(c => String(existentes[k][c] ?? '') === String(datos[c] ?? ''))) tipo = 'igual';
+    out.push({ crudo, datos, errores, avisos, tipo });
+  });
+  return out;
+}
+
+/* ── Historial ───────────────────────────────────────────── */
+function vistaHistorial() {
+  const h = S.hist, q = norm(h.q);
+  const filas = h.registros.filter(x => (!h.usuario || x.usuario === h.usuario) && (!q || norm(`${x.clave} ${x.tarea} ${x.campo} ${x.antes} ${x.despues}`).includes(q)));
+  const nombres = [...new Set(S.usuarios.map(u => u.nombre).concat(h.registros.map(x => x.usuario)))].sort();
+  return `
+    <header class="topbar">
+      <div><h1>Historial</h1><div class="stats"><span>Quién hizo cada cambio y cuándo</span></div></div>
+      <span class="sync" id="sync" data-s="ok"><i class="dot"></i><span>Al día</span></span>
+    </header>
+    <div class="toolbar">
+      <label class="search"><span class="sr">Buscar en historial</span>${ico('search')}<input class="input" id="hq" placeholder="Buscar por ID, tarea o valor" value="${esc(h.q)}"></label>
+      <select class="select" id="hu" style="width:200px" aria-label="Filtrar por persona"><option value="">Todas las personas</option>${nombres.map(n => `<option ${n === h.usuario ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select>
+      <span class="spacer"></span>
+      <button class="btn btn-sec" id="hRef">${ico('refresh')}<span class="lbl">Actualizar</span></button>
+    </div>
+    <div class="board-wrap">
+      <div class="table-wrap">
+        ${h.cargando && !h.registros.length ? '<div class="empty">Cargando historial…</div>' : !filas.length ? '<div class="empty">No hay movimientos que coincidan.</div>' : `
+        <table class="hist-table"><thead><tr><th>Cuándo</th><th>Quién</th><th>Acción</th><th>Tarea</th><th>Detalle</th></tr></thead>
+        <tbody>${filas.map(x => {
+          const [sem, ...id] = String(x.clave).split('-');
+          return `<tr>
+          <td class="hint" style="white-space:nowrap">${esc(x.fecha)}</td>
+          <td><span class="who"><span class="avatar">${esc(iniciales(x.usuario))}</span><b style="font-weight:600">${esc(x.usuario)}</b></span></td>
+          <td><span class="badge ${x.accion === 'Eliminó' ? 'bad' : x.accion.startsWith('Import') ? 'info' : ''}">${esc(x.accion)}</span></td>
+          <td><span class="mono">S${esc(sem)} · ${esc(id.join('-'))}</span> ${esc(x.tarea)}</td>
+          <td>${x.campo ? `<span class="hint">${esc(x.campo)}:</span> ${esc(fmtValor(x.antes, x.campo) || 'vacío')}<span class="arrow">→</span><b style="font-weight:600">${esc(fmtValor(x.despues, x.campo) || 'vacío')}</b>` : `<span class="hint">${esc(x.antes)}</span>`}</td>
+        </tr>`; }).join('')}</tbody></table>`}
+      </div>
+    </div>`;
+}
+function bindHistorial() {
+  const hq = $('#hq');
+  hq.oninput = () => { S.hist.q = hq.value; const pos = hq.selectionStart; renderMain(); const n = $('#hq'); n.focus(); n.setSelectionRange(pos, pos); };
+  $('#hu').onchange = e => { S.hist.usuario = e.target.value; renderMain(); };
+  $('#hRef').onclick = cargarHistorial;
+}
+async function cargarHistorial() {
+  S.hist.cargando = true; if (S.vista === 'historial') renderMain();
+  try { const r = await api('historial', { limite: 500 }); if (r.ok) S.hist.registros = r.registros; }
+  catch (_) { toast('No se pudo cargar el historial.', 'bad'); }
+  S.hist.cargando = false; if (S.vista === 'historial') renderMain();
+}
+
+/* ════════════════════════════════════════════════════════════
+   SINCRONIZACIÓN
+   ════════════════════════════════════════════════════════════ */
+async function iniciar() {
+  if (S.user && S.user.rol !== 'admin' && !S.miasInicial) { S.f.mias = true; S.miasInicial = true; } // el equipo entra viendo solo lo suyo
+  render();
+  await recargar();
+  if (!window.__nexoSync) window.__nexoSync = setInterval(sincronizar, SEGUNDOS_SYNC * 1000);
+}
+function elegirSemana() {
+  const s = semanas();
+  if (S.semana && s.includes(S.semana)) return;
+  const actual = semanaISO();
+  S.semana = s.includes(actual) ? actual : (s[0] || actual);
+}
+async function recargar() {
+  try {
+    const r = await api('bootstrap');
+    if (!r.ok) return;
+    S.user = r.usuario; S.usuarios = r.usuarios; S.acts = r.actividades; S.rev = r.rev;
+    try { localStorage.setItem('nexo_user', JSON.stringify(r.usuario)); } catch (_) {}
+    elegirSemana();
+    if (S.vista === 'tablero') repintarTablero();
+  } catch (_) { setSync('error'); toast('No hay conexión con el servidor.', 'bad'); }
+}
+let sincronizando = false;
+async function sincronizar() {
+  if (!S.token || document.hidden || S.pendientes || sincronizando || S.imp) return;
+  sincronizando = true;
+  try {
+    const r = await api('poll', { rev: S.rev });
+    if (r.ok && r.cambios) {
+      S.acts = r.actividades; S.rev = r.rev; elegirSemana();
+      if (S.vista === 'tablero') repintarTablero();
+      if (S.edit && S.edit.clave) {
+        const act = S.acts.find(a => a.clave === S.edit.clave);
+        if (act && act.version !== S.edit.version && !editorSucio()) { S.edit = { clave: act.clave, original: { ...act }, version: act.version }; pintarEditor(act); }
+      }
+      if (r.autores && r.autores.length) toast(`Tablero actualizado con cambios de ${r.autores.join(', ')}`, 'info');
+    }
+    if ($('#sync') && $('#sync').dataset.s === 'error') setSync('ok');
+  } catch (_) { setSync('error'); }
+  sincronizando = false;
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) sincronizar(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if ($('#modal')) { if ($('#modal').dataset.imp) cerrarImportar(); else cerrarModal(); }
+    else if ($('#capa')) cerrarEditor();
+  }
+  if (e.key === '/' && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName) && $('#q') && !$('#capa') && !$('#modal')) { e.preventDefault(); $('#q').focus(); }
+});
+
+/* ════════════════════════════════════════════════════════════
+   MODO DEMO (solo cuando API_URL está vacía)
+   Imita al servidor guardando en este navegador.
+   ════════════════════════════════════════════════════════════ */
+const Demo = (() => {
+  const KEY = 'nexo_demo_v2';
+  const USERS = [
+    { usuario: 'admin', nombre: 'Arturo Gutiérrez', pin: '1234', rol: 'admin' },
+    { usuario: 'julio', nombre: 'Julio Chávez', pin: '1111', rol: 'editor' },
+    { usuario: 'luis', nombre: 'Luis Segura', pin: '2222', rol: 'editor' }
+  ];
+  let mem = null;
+  function semilla() {
+    const t = ahoraTxt(), sem = semanaISO();
+    const d = n => { const f = new Date(); f.setDate(f.getDate() + n); return iso(f); };
+    let orden = 0;
+    const mk = (id, tarea, tipo, responsable, fecha, frecuencia, estado, pctAcum, observaciones, meta, prealineacion = '') =>
+      ({ clave: clave(sem, id), semana: sem, id, tarea, tipo, prealineacion, responsable, fecha, frecuencia, estado, resultado: '', pctDiario: '0', pctAcum, observaciones, meta, orden: ++orden, creadoPor: 'Arturo Gutiérrez', creado: t, modificadoPor: 'Arturo Gutiérrez', modificado: t, version: 1 });
+    return { rev: 1, log: [], acts: [
+      mk('MKT1', 'Reportar los pedidos a surtir del día con nota de venta para almacén y finanzas', 'Operativa', 'Julio Chávez', '', 'Diaria', 'En proceso', '0', 'Diario, antes del corte de venta directa de 2:00 p.m.', '100%'),
+      mk('MKT2', 'Registrar las ventas y cierres del día en los formatos', 'Operativa', 'Julio Chávez', '', 'Diaria', 'En proceso', '0', 'Alimenta el reporte de facturación.', '100% de ventas registradas'),
+      mk('MKT6', 'Aportar tiempos de respuesta AFZ', 'Operativa', 'Julio Chávez', d(3), 'Semanal', 'Programado', '0', 'Cada viernes.', ''),
+      mk('MKT12', 'Elaborar guiones para contenido de AFZ', 'Operativa', 'Luis Segura', d(-1), 'Semanal', 'Programado', '0', '', ''),
+      mk('MKT13', 'Grabar y producir contenido AFZ', 'Operativa', 'Luis Segura', d(0), 'Semanal', 'Programado', '0', '', ''),
+      mk('MKT21', 'Realizar la Reunión Semanal de Seguimiento', 'Operativa', 'Arturo Gutiérrez', d(-1), 'Semanal', 'Terminado', '100', 'Cada lunes.', ''),
+      mk('MKT26', 'Entrega final, revisión de la etapa 1 del HUB y preparación de la etapa 2', 'Proyecto', 'Arturo Gutiérrez', d(3), '', 'En proceso', '90', 'Revisión pendiente.', 'Etapa 1 entregada', 'Minuta'),
+      mk('MKT37', 'Terminar el manual de packaging para almacén', 'Proyecto', 'Luis Segura', d(3), '', 'En proceso', '70', 'Instrucciones y fotos listas; falta edición.', 'Manual terminado al 100%', 'Minuta')
+    ] };
+  }
+  const cargar = () => { if (mem) return mem; try { const x = JSON.parse(localStorage.getItem(KEY)); if (x && x.acts) return (mem = x); } catch (_) {} return (mem = semilla()); };
+  const salvar = x => { mem = x; try { localStorage.setItem(KEY, JSON.stringify(x)); } catch (_) {} };
+  const pub = u => ({ usuario: u.usuario, nombre: u.nombre, rol: u.rol });
+  const difs = (a, d) => CAMPOS_EDIT.filter(k => String(a[k] ?? '') !== String(d[k] ?? '')).map(k => ({ campo: k, antes: a[k] || '', despues: d[k] || '' }));
+  const sigId = ids => ID_PREFIJO + (ids.reduce((m, id) => { const x = String(id).match(new RegExp('^' + ID_PREFIJO + '(\\d+)$', 'i')); return x ? Math.max(m, +x[1]) : m; }, 0) + 1);
+  const maxOrden = (db, sem) => db.acts.filter(a => a.semana === sem).reduce((m, a) => Math.max(m, a.orden), 0);
+  const log = (db, filas) => filas.forEach(f => db.log.push({ fecha: f[0], usuario: f[1], accion: f[2], clave: f[3], tarea: f[4], campo: f[5], antes: f[6], despues: f[7] }));
+
+  async function handle(req) {
+    await new Promise(r => setTimeout(r, 200));
+    const db = cargar();
+    if (req.action === 'login') {
+      const u = USERS.find(x => x.usuario === String(req.usuario).trim().toLowerCase() && x.pin === String(req.pin).trim());
+      return u ? { ok: true, token: 'demo:' + u.usuario, usuario: pub(u) } : { ok: false, error: 'LOGIN', mensaje: 'Usuario o PIN incorrectos.' };
+    }
+    const u = USERS.find(x => 'demo:' + x.usuario === req.token);
+    if (!u) return { ok: false, error: 'SESION', mensaje: 'Tu sesión expiró. Vuelve a entrar.' };
+    const ahora = ahoraTxt();
+    switch (req.action) {
+      case 'logout': return { ok: true };
+      case 'bootstrap': return { ok: true, usuario: pub(u), usuarios: USERS.map(pub), actividades: db.acts.map(a => ({ ...a })), rev: db.rev };
+      case 'poll': return { ok: true, cambios: false, rev: db.rev };
+      case 'historial': {
+        let l = db.log.slice().reverse();
+        if (req.clave) l = l.filter(x => x.clave === req.clave);
+        return { ok: true, registros: l.slice(0, req.limite || 200) };
+      }
+      case 'crear': {
+        const d = limpiar(req.datos); if (d.error) return { ok: false, ...d };
+        if (!d.id) d.id = sigId(db.acts.filter(a => a.semana === d.semana).map(a => a.id));
+        d.clave = clave(d.semana, d.id);
+        if (db.acts.some(a => a.clave === d.clave)) return { ok: false, error: 'DUPLICADO', mensaje: `Ya existe ${d.id} en la semana ${d.semana}.` };
+        const o = { ...d, orden: maxOrden(db, d.semana) + 1, creadoPor: u.nombre, creado: ahora, modificadoPor: u.nombre, modificado: ahora, version: 1 };
+        db.acts.push(o); db.rev++; log(db, [[ahora, u.nombre, 'Creó', o.clave, o.tarea, '', '', '']]); salvar(db);
+        return { ok: true, actividad: { ...o }, rev: db.rev };
+      }
+      case 'actualizar': {
+        const a = db.acts.find(x => x.clave === req.clave);
+        if (!a) return { ok: false, error: 'NOEXISTE', mensaje: 'Esta tarea ya no existe.' };
+        if (req.version && req.version !== a.version) return { ok: false, error: 'CONFLICTO', actividad: { ...a }, mensaje: `${a.modificadoPor} cambió esta tarea mientras la editabas.` };
+        const d = limpiar({ ...a, ...req.datos, id: a.id, semana: a.semana }); if (d.error) return { ok: false, ...d };
+        const c = difs(a, d);
+        if (!c.length) return { ok: true, actividad: { ...a }, sinCambios: true, rev: db.rev };
+        Object.assign(a, d, { clave: a.clave, modificadoPor: u.nombre, modificado: ahora, version: a.version + 1 });
+        db.rev++; log(db, c.map(x => [ahora, u.nombre, x.campo === 'estado' ? 'Movió' : 'Editó', a.clave, a.tarea, NOMBRES[x.campo], x.antes, x.despues])); salvar(db);
+        return { ok: true, actividad: { ...a }, rev: db.rev };
+      }
+      case 'eliminar': {
+        const a = db.acts.find(x => x.clave === req.clave);
+        if (a) { db.acts = db.acts.filter(x => x !== a); db.rev++; log(db, [[ahora, u.nombre, 'Eliminó', a.clave, a.tarea, '', [a.responsable, a.estado].filter(Boolean).join(' · '), '']]); salvar(db); }
+        return { ok: true, rev: db.rev };
+      }
+      case 'importar': {
+        let nuevas = 0, actualizadas = 0, sinCambio = 0, sucio = false; const errores = [];
+        const pos = {}, enPegado = {};
+        req.filas.forEach((f, i) => {
+          const sem = Number(f.semana) || semanaISO();
+          const prev = f.id && db.acts.find(a => a.clave === clave(sem, f.id));
+          if (prev) f = conservarVacios(prev, f);
+          const d = limpiar(f); if (d.error) { errores.push({ fila: i + 1, mensaje: d.mensaje }); return; }
+          if (!d.id) d.id = sigId(db.acts.filter(a => a.semana === d.semana).map(a => a.id).concat(req.filas.map(x => x.id || '')));
+          d.clave = clave(d.semana, d.id);
+          pos[d.semana] = (pos[d.semana] || 0) + 1; enPegado[d.clave] = true;
+          const ex = db.acts.find(a => a.clave === d.clave);
+          if (ex) {
+            if (ex.orden !== pos[d.semana]) { ex.orden = pos[d.semana]; sucio = true; }
+            const c = difs(ex, d); if (!c.length) { sinCambio++; return; }
+            Object.assign(ex, d, { modificadoPor: u.nombre, modificado: ahora, version: ex.version + 1 }); actualizadas++;
+            log(db, c.map(x => [ahora, u.nombre, 'Importó (actualizó)', ex.clave, ex.tarea, NOMBRES[x.campo], x.antes, x.despues]));
+          } else {
+            db.acts.push({ ...d, orden: pos[d.semana], creadoPor: u.nombre, creado: ahora, modificadoPor: u.nombre, modificado: ahora, version: 1 }); nuevas++;
+            log(db, [[ahora, u.nombre, 'Importó', d.clave, d.tarea, '', '', '']]);
+          }
+        });
+        db.acts.forEach(a => { if (pos[a.semana] && !enPegado[a.clave] && a.orden <= pos[a.semana] + 1000) { a.orden = pos[a.semana] + 1000 + a.orden; sucio = true; } });
+        if (nuevas || actualizadas || sucio) db.rev++;
+        salvar(db);
+        return { ok: true, nuevas, actualizadas, sinCambio, errores, rev: db.rev };
+      }
+    }
+    return { ok: false, error: 'ACCION', mensaje: 'Acción desconocida.' };
+  }
+  return { handle };
+})();
+
+/* ── Arranque ────────────────────────────────────────────── */
+if (S.token && S.user) iniciar(); else render();
+</script>
+</body>
+</html>
