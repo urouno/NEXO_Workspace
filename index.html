@@ -78,7 +78,7 @@ button{cursor:pointer;background:none;border:0}
 .dot{width:8px;height:8px;border-radius:50%;flex:none;background:var(--placeholder)}
 .dot[data-e="En proceso"]{background:var(--warn)}
 .dot[data-e="En revisión"]{background:var(--info)}
-.dot[data-e="Finalizado"]{background:var(--ok)}
+.dot[data-e="Finalizado"],.dot[data-e="Terminado"]{background:var(--ok)}
 .avatar{width:24px;height:24px;border-radius:50%;background:var(--subtle);border:1px solid var(--border);color:var(--text-2);font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex:none}
 .avatar.lg{width:32px;height:32px;font-size:12px}
 .mono{font-family:var(--mono);font-size:var(--fs-label);color:var(--muted)}
@@ -150,13 +150,6 @@ button{cursor:pointer;background:none;border:0}
 .due svg{width:14px;height:14px}
 .due.late{color:var(--bad-tx);font-weight:600}
 .empty-col{border:1px dashed var(--border-strong);border-radius:var(--r);padding:24px 16px;text-align:center;color:var(--placeholder);font-size:var(--fs-label);font-weight:500}
-
-/** Al actualizar por importación, una celda vacía conserva el valor que ya existía. */
-function conservarVacios(previa, nueva) {
-  const o = { id: previa.id, actividad: previa.actividad, descripcion: previa.descripcion, responsable: previa.responsable, prioridad: previa.prioridad, fecha: previa.fecha, estado: previa.estado };
-  Object.keys(nueva).forEach(k => { if (String(nueva[k] ?? '').trim() !== '') o[k] = nueva[k]; });
-  return o;
-}
 
 /* ── Historial ───────────────────────────────────────────── */
 .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:auto}
@@ -317,6 +310,124 @@ a.btn{text-decoration:none}
   .seg.marcas{width:100%;overflow-x:auto}
   .docs{grid-template-columns:1fr}
 }
+
+/* ── Conversaciones ──────────────────────────────────────── */
+.nav-item{position:relative}
+.nav-count{position:absolute;top:2px;right:8px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--primary);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid var(--surface)}
+.chat-wrap{flex:1;min-height:0;display:grid;grid-template-columns:320px minmax(0,1fr);gap:16px;padding:0 32px 32px}
+.conv-list,.chat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.chat{position:relative}
+.conv-list-head{padding:12px;border-bottom:1px solid var(--border);display:flex;gap:8px}
+.conv-list-head .search{flex:1;min-width:0}
+.convs{flex:1;overflow:auto;padding:4px}
+.conv{display:flex;gap:12px;width:100%;text-align:left;padding:12px;border-radius:var(--r);align-items:flex-start;transition:background .15s}
+.conv:hover{background:var(--canvas)}
+.conv[aria-current=true]{background:var(--primary-soft)}
+.conv-ico{width:36px;height:36px;border-radius:var(--r);background:var(--subtle);color:var(--text-2);display:flex;align-items:center;justify-content:center;flex:none}
+.conv-ico svg{width:18px;height:18px}
+.conv-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.conv-t{display:flex;gap:8px;align-items:baseline}
+.conv-t b{flex:1;min-width:0;font-weight:500;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.conv.unread .conv-t b{font-weight:700}
+.conv-time{font-size:var(--fs-label);color:var(--muted);flex:none}
+.conv.unread .conv-time{color:var(--primary-hover);font-weight:600}
+.conv-prev{display:flex;gap:8px;align-items:center;font-size:var(--fs-label);color:var(--muted)}
+.conv-prev>span:first-child{flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.conv.unread .conv-prev>span:first-child{color:var(--text-2)}
+.conv-tag{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.unread-n{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--primary);color:#fff;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.list-foot{padding:8px;border-top:1px solid var(--border)}
+.list-foot .btn{width:100%}
+.list-foot:empty{display:none}
+.chat-head{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--border);min-height:64px}
+.chat-head h2{font-size:var(--fs-sub);font-weight:600;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chat-sub{display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:var(--fs-label);color:var(--muted);margin-top:2px}
+.task-link{display:inline-flex;gap:6px;align-items:center;font-size:var(--fs-label);font-weight:600;color:var(--primary-hover)}
+.task-link:hover{text-decoration:underline}
+.only-m{display:none}
+.msgs{flex:1;min-height:0;overflow:auto;padding:16px 24px 24px;display:flex;flex-direction:column;gap:4px;background:var(--canvas)}
+.day-sep{align-self:center;margin:16px 0 4px;padding:2px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--border);font-size:var(--fs-label);font-weight:600;color:var(--muted)}
+.msg{display:flex;gap:8px;max-width:min(560px,85%);align-items:flex-start}
+.msg.first{margin-top:8px}
+.msg.mine{align-self:flex-end;flex-direction:row-reverse}
+.msg .avatar{visibility:hidden;margin-top:2px}
+.msg.first .avatar{visibility:visible}
+.bubble{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:8px 12px;display:flex;flex-direction:column;gap:6px;min-width:0;box-shadow:var(--sh1)}
+.msg.mine .bubble{background:var(--primary-soft);border-color:#BFDBFE}
+.msg-name{font-size:var(--fs-label);font-weight:700;color:var(--text-2)}
+.msg-txt{white-space:pre-wrap;word-break:break-word}
+.msg-txt a{color:var(--primary);text-decoration:underline}
+.msg-meta{display:flex;gap:8px;justify-content:flex-end;align-items:center;font-size:11px;color:var(--muted);line-height:16px}
+.msg-opt{opacity:0;color:var(--muted);display:inline-flex;transition:opacity .15s}
+.msg-opt svg{width:14px;height:14px}
+.msg:hover .msg-opt,.msg-opt:focus-visible{opacity:1}
+.msg-opt:hover{color:var(--bad-tx)}
+@media (hover:none){.msg-opt{opacity:.5}}
+.msg.sending .bubble{opacity:.75}
+.msg.failed .bubble{border-color:var(--bad-bd);background:var(--bad-bg)}
+.msg-del{font-style:italic;color:var(--muted)}
+.att-grid{display:grid;gap:4px;grid-template-columns:repeat(2,minmax(0,140px))}
+.att-grid.one{grid-template-columns:minmax(0,320px)}
+.att-img{display:block;width:100%;border-radius:8px;overflow:hidden;background:var(--subtle);cursor:zoom-in;position:relative;padding:0;border:0;aspect-ratio:1}
+.att-grid.one .att-img{aspect-ratio:auto;max-height:360px;min-height:120px}
+.att-img img{display:block;width:100%;height:100%;object-fit:cover}
+.att-grid.one .att-img img{max-height:360px}
+.att-img.vid{background:#1E293B;min-height:140px}
+.att-play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.att-play span{width:44px;height:44px;border-radius:50%;background:rgba(15,23,42,.65);color:#fff;display:flex;align-items:center;justify-content:center}
+.att-play svg{width:20px;height:20px;margin-left:2px}
+.att-file{display:flex;gap:12px;align-items:center;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);text-decoration:none;min-width:0;max-width:320px}
+.att-file:hover{border-color:var(--border-strong)}
+.att-file svg{width:20px;height:20px;color:var(--muted);flex:none}
+.att-file b{font-weight:600;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.composer{border-top:1px solid var(--border);padding:12px 16px;display:flex;flex-direction:column;gap:8px;background:var(--surface)}
+.composer-row{display:flex;gap:8px;align-items:flex-end}
+.composer .textarea{min-height:40px;height:40px;max-height:160px;resize:none;padding:8px 12px}
+.tray{display:flex;gap:8px;flex-wrap:wrap}
+.tray-item{position:relative;width:64px;height:64px;border-radius:8px;border:1px solid var(--border);overflow:hidden;background:var(--subtle);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;color:var(--muted)}
+.tray-item>svg{width:20px;height:20px}
+.tray-item img{width:100%;height:100%;object-fit:cover}
+.tray-item .x{position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;background:rgba(15,23,42,.7);color:#fff;display:flex;align-items:center;justify-content:center}
+.tray-item .x svg{width:12px;height:12px}
+.tray-item .fname{font-size:10px;line-height:1.2;padding:0 4px;text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-2)}
+.drop-over{position:absolute;inset:8px;background:rgba(239,246,255,.94);border:2px dashed var(--primary);border-radius:var(--r-lg);display:flex;align-items:center;justify-content:center;font-weight:600;color:var(--primary-hover);z-index:5;pointer-events:none}
+.chat-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:var(--muted);text-align:center;padding:32px}
+.chat-empty .conv-ico{width:48px;height:48px}
+.new-pill{position:absolute;left:50%;transform:translateX(-50%);bottom:88px;z-index:4;box-shadow:var(--sh2)}
+.banner{padding:8px 16px;background:var(--warn-bg);border-bottom:1px solid var(--warn-bd);color:var(--warn-tx);font-size:var(--fs-label);font-weight:500}
+.picker{border:1px solid var(--border);border-radius:var(--r);max-height:264px;overflow:auto}
+.pick{display:flex;flex-direction:column;gap:2px;width:100%;text-align:left;padding:8px 12px;border-bottom:1px solid var(--subtle)}
+.pick:last-child{border-bottom:0}
+.pick:hover{background:var(--canvas)}
+.pick[aria-pressed=true]{background:var(--primary-soft)}
+.pick-t{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.viewer{position:fixed;inset:0;z-index:50;background:rgba(15,23,42,.94);display:flex;flex-direction:column}
+.viewer-bar{display:flex;align-items:center;gap:8px;padding:8px 16px;color:#fff;font-size:var(--fs-body)}
+.viewer-bar .btn{color:#E2E8F0}
+.viewer-bar .btn:hover{background:rgba(255,255,255,.1);color:#fff}
+.viewer-body{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 16px 16px}
+.viewer-body img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;min-width:0}
+.viewer-body iframe,.viewer-body video{width:min(960px,100%);height:min(540px,100%);border:0;border-radius:8px;background:#000}
+.viewer-nav{color:#fff;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex:none}
+.viewer-nav:hover{background:rgba(255,255,255,.2)}
+.viewer-nav svg{width:20px;height:20px}
+@media (max-width:1023px){.chat-wrap{grid-template-columns:280px minmax(0,1fr)}}
+@media (max-width:767px){
+  .nav-count{right:4px}
+  .chat-wrap{grid-template-columns:minmax(0,1fr);padding:0 16px 16px}
+  .chat-wrap.abierta .conv-list{display:none}
+  .chat-wrap:not(.abierta) .chat{display:none}
+  .main.chat-open .topbar,.main.chat-open .demo-bar{display:none}
+  .main.chat-open .chat-wrap{padding:0}
+  .main.chat-open .chat{border:0;border-radius:0}
+  .only-m{display:inline-flex}
+  .chat-head{padding:8px}
+  .msgs{padding:12px 12px 16px}
+  .msg{max-width:90%}
+  .composer{padding:8px}
+  .composer .textarea{height:44px;min-height:44px}
+  .viewer-nav{display:none}
+}
 </style>
 </head>
 <body>
@@ -330,7 +441,7 @@ a.btn{text-decoration:none}
    Si la dejas vacía, la app funciona en MODO DEMO (datos solo en
    este navegador) para que puedas probarla.
    ════════════════════════════════════════════════════════════ */
-const API_URL = 'https://script.google.com/macros/s/AKfycbzo997HfbiUGJqu2or6tPqMp8L5C0-fDYIYb4HEQDId7TVE-MTn3KH7GLf7oxkA4nNRAg/exec';
+const API_URL = '';
 
 /* Estatus del plan = columnas del tablero (deben coincidir con Code.gs). */
 const ESTADOS = ['Programado', 'En proceso', 'En revisión', 'Terminado'];
@@ -383,7 +494,16 @@ const I = {
   users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/>',
   refresh: '<path d="M20 11a8 8 0 0 0-14.9-3M4 4v4h4M4 13a8 8 0 0 0 14.9 3M20 20v-4h-4"/>',
   chevron: '<path d="m9 6 6 6-6 6"/>',
-  file: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/>'
+  file: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/>',
+  chat: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>',
+  send: '<path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/>',
+  clip: '<path d="m21 11-8.6 8.6a5 5 0 0 1-7-7L14 4a3.5 3.5 0 0 1 5 5l-8.6 8.6a2 2 0 0 1-2.8-2.8L15.5 7"/>',
+  back: '<path d="m15 18-6-6 6-6"/>',
+  play: '<path d="M8 5v14l11-7z" fill="currentColor"/>',
+  trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+  archive: '<rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11h14V8M10 12h4"/>',
+  video: '<rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3"/>',
+  tag: '<path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9z"/><circle cx="8" cy="8" r="1.5"/>'
 };
 const ico = n => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]}</svg>`;
 
@@ -487,8 +607,14 @@ const S = {
   f: { q: '', resp: '', tipo: '', frec: '', mias: false },
   docs: [], bib: { q: '', marca: '' }, docEdit: null,
   edit: null, imp: null, hist: { registros: [], usuario: '', q: '', cargando: false },
-  pendientes: 0
+  pendientes: 0,
+  chat: null
 };
+function chatVacio() {
+  return { convs: [], revChat: 0, abierta: null, msgs: {}, hayMas: {}, q: '', verArchivadas: false,
+           enviando: 0, cargando: false, trays: {}, borrador: {}, editar: null, pegadoAbajo: true };
+}
+S.chat = chatVacio();
 try { S.token = localStorage.getItem('nexo_token'); S.user = JSON.parse(localStorage.getItem('nexo_user') || 'null'); } catch (e) {}
 
 /* ── Conexión con el servidor ────────────────────────────── */
@@ -537,6 +663,7 @@ function render() {
     <nav class="rail" aria-label="Menú principal">
       <div class="brand-mark" title="NEXO Workspace">N</div>
       <button class="nav-item" data-nav="tablero" ${S.vista === 'tablero' ? 'aria-current="page"' : ''}>${ico('board')}Tablero</button>
+      <button class="nav-item" data-nav="chat" ${S.vista === 'chat' ? 'aria-current="page"' : ''}>${ico('chat')}Chats<span class="nav-count" hidden></span></button>
       <button class="nav-item" data-nav="biblioteca" ${S.vista === 'biblioteca' ? 'aria-current="page"' : ''}>${ico('book')}Biblioteca</button>
       <button class="nav-item" data-nav="historial" ${S.vista === 'historial' ? 'aria-current="page"' : ''}>${ico('history')}Historial</button>
       <div class="rail-foot">
@@ -546,14 +673,20 @@ function render() {
     </nav>
     <main class="main" id="main"></main>
   </div>`;
-  root.querySelectorAll('[data-nav]').forEach(b => b.onclick = () => { S.vista = b.dataset.nav; render(); if (S.vista === 'historial') cargarHistorial(); });
+  root.querySelectorAll('[data-nav]').forEach(b => b.onclick = () => {
+    S.vista = b.dataset.nav; render();
+    if (S.vista === 'historial') cargarHistorial();
+    if (S.vista === 'chat') { if (S.chat.abierta) abrirConv(S.chat.abierta); else sincronizarChat(true); }
+  });
   root.querySelector('[data-action=salir]').onclick = salir;
   renderMain();
+  pintarNavCount();
 }
 function renderMain() {
   const main = $('#main'); if (!main) return;
-  main.innerHTML = S.vista === 'tablero' ? vistaTablero() : S.vista === 'biblioteca' ? vistaBiblioteca() : vistaHistorial();
-  if (S.vista === 'tablero') bindTablero(); else if (S.vista === 'biblioteca') bindBiblioteca(); else bindHistorial();
+  main.classList.toggle('chat-open', S.vista === 'chat' && !!S.chat.abierta);
+  main.innerHTML = S.vista === 'tablero' ? vistaTablero() : S.vista === 'biblioteca' ? vistaBiblioteca() : S.vista === 'chat' ? vistaChat() : vistaHistorial();
+  if (S.vista === 'tablero') bindTablero(); else if (S.vista === 'biblioteca') bindBiblioteca(); else if (S.vista === 'chat') bindChat(); else bindHistorial();
 }
 
 /* ── Login ───────────────────────────────────────────────── */
@@ -600,6 +733,8 @@ async function salir() { try { await api('logout'); } catch (_) {} salirLocal();
 function salirLocal() {
   S.token = null; S.user = null; S.acts = []; S.docs = []; S.edit = null; S.imp = null; S.docEdit = null; S.semana = null; S.vista = 'tablero'; S.miasInicial = false;
   S.f = { q: '', resp: '', tipo: '', frec: '', mias: false };
+  Object.values(S.chat.trays).flat().forEach(t => { if (t.preview) URL.revokeObjectURL(t.preview); });
+  S.chat = chatVacio(); document.title = 'NEXO Workspace';
   try { localStorage.removeItem('nexo_token'); localStorage.removeItem('nexo_user'); } catch (_) {}
   cerrarCapas(); cerrarModal(); render();
 }
@@ -1421,6 +1556,709 @@ function eliminarDoc(d) {
 }
 
 /* ════════════════════════════════════════════════════════════
+   CONVERSACIONES (Fase 3)
+   Vista aparte del tablero: lista de conversaciones + chat.
+   Los adjuntos se suben a Drive (vía Apps Script) y aquí se ven como miniatura.
+   ════════════════════════════════════════════════════════════ */
+const MAX_MB_ADJUNTO = 15;        // igual que en Code.gs
+const LADO_MAX_IMG = 1920;        // las imágenes se reducen a este lado mayor antes de subir
+const SEG_CHAT_ABIERTO = 5;       // consulta con la vista de conversaciones abierta
+const SEG_CHAT_FONDO = 30;        // consulta en otras vistas (solo para el contador)
+
+const convDe = id => S.chat.convs.find(c => c.id === id);
+const actDe = k => S.acts.find(a => a.clave === k);
+const noLeidosTotal = () => S.chat.convs.filter(c => !c.archivada).reduce((n, c) => n + (c.noLeidos || 0), 0);
+const trayDe = id => (S.chat.trays[id] = S.chat.trays[id] || []);
+const ahoraTxtS = () => { const d = new Date(); return `${ahoraTxt()}:${String(d.getSeconds()).padStart(2, '0')}`; };
+const ordenMsgs = (a, b) => (a.seq || 1e15) - (b.seq || 1e15);
+const esMedio = a => /^(image|video)\//.test(a.tipo || '');
+const esDemoAdj = a => String(a.id || '').startsWith('demo');
+const puedeAjustarConv = c => puedeEditar() && (c.creadoPor === S.user.usuario || esAdmin());
+function tamTxt(b) { b = Number(b) || 0; return b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB'; }
+function ayerISO() { const d = new Date(); d.setDate(d.getDate() - 1); return iso(d); }
+function horaCorta(f) {
+  if (!f) return '';
+  const [d, h = ''] = f.split(' ');
+  if (d === hoyISO()) return h.slice(0, 5);
+  if (d === ayerISO()) return 'Ayer';
+  return fechaCorta(d);
+}
+function diaLargo(d) {
+  if (d === hoyISO()) return 'Hoy';
+  if (d === ayerISO()) return 'Ayer';
+  const [y, m, dd] = d.split('-').map(Number);
+  const t = new Date(y, m - 1, dd).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'short' });
+  return t.charAt(0).toUpperCase() + t.slice(1) + (y !== new Date().getFullYear() ? ' ' + y : '');
+}
+const minutosEntre = (a, b) => (new Date(String(b).replace(' ', 'T')) - new Date(String(a).replace(' ', 'T'))) / 60000;
+function textoParticipantes(c) {
+  if (!c.participantes || norm(c.participantes) === 'todos') return 'Todo el equipo';
+  return c.participantes.split(',').map(u => u.trim()).map(u => u === S.user.usuario ? 'Tú' : nombreDe(u).split(' ')[0]).join(', ');
+}
+function enlazar(txt) {
+  return esc(txt).replace(/(https?:\/\/[^\s<]+?)(?=[.,;:!?)\]]*(?:\s|$|&lt;))/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+}
+
+/* Direcciones de los adjuntos en Drive (o la vista previa local mientras se envía) */
+function urlAdj(a, modo) {
+  if (a.local && (modo === 'mini' || modo === 'grande' || modo === 'video')) return a.local;
+  if (esDemoAdj(a)) return Demo.archivo(a.id) || '';
+  const id = encodeURIComponent(a.id);
+  if (modo === 'mini') return `https://drive.google.com/thumbnail?id=${id}&sz=w640`;
+  if (modo === 'grande') return `https://drive.google.com/thumbnail?id=${id}&sz=w2000`;
+  if (modo === 'video') return `https://drive.google.com/file/d/${id}/preview`;
+  return `https://drive.google.com/file/d/${id}/view`;
+}
+/* Si la miniatura de Drive falla, se intenta otra dirección; si también falla, se muestra un ícono. */
+window.nexoImgFalla = function (img, id, tam) {
+  if (!img.dataset.alt) { img.dataset.alt = '1'; img.src = `https://lh3.googleusercontent.com/d/${encodeURIComponent(id)}=w${tam || 640}`; return; }
+  img.onerror = null; img.style.display = 'none';
+};
+
+function pintarNavCount() {
+  const n = noLeidosTotal();
+  const el = document.querySelector('[data-nav=chat] .nav-count');
+  if (el) { el.hidden = !n; el.textContent = n > 99 ? '99+' : n; }
+  document.title = (n ? `(${n}) ` : '') + 'NEXO Workspace';
+}
+
+/* ── Vista ───────────────────────────────────────────────── */
+function vistaChat() {
+  const c = convDe(S.chat.abierta);
+  return `
+    <header class="topbar">
+      <div><h1>Conversaciones</h1><div class="stats" id="chatStats">${htmlStatsChat()}</div></div>
+      <span class="sync" id="sync" data-s="ok"><i class="dot"></i><span>Al día</span></span>
+    </header>
+    ${!API_URL ? '<div class="demo-bar">Modo demostración: los mensajes y archivos se guardan solo en este navegador.</div>' : ''}
+    <div class="chat-wrap ${c ? 'abierta' : ''}" id="chatWrap">
+      <section class="conv-list" aria-label="Lista de conversaciones">
+        <div class="conv-list-head">
+          <label class="search"><span class="sr">Buscar conversación</span>${ico('search')}
+            <input class="input" id="cq" placeholder="Buscar" value="${esc(S.chat.q)}"></label>
+          ${puedeEditar() ? `<button class="btn btn-sec" id="btnConvNueva" title="Nueva conversación">${ico('plus')}Nueva</button>` : ''}
+        </div>
+        <div class="convs" id="convs">${htmlConvs()}</div>
+        <div class="list-foot" id="convsFoot">${htmlConvsFoot()}</div>
+      </section>
+      <section class="chat" id="chat" aria-label="Conversación">${c ? htmlChat(c) : htmlChatVacio()}</section>
+    </div>`;
+}
+function htmlStatsChat() {
+  const n = noLeidosTotal(), t = S.chat.convs.filter(c => !c.archivada).length;
+  return n ? `<span><b>${n}</b> sin leer</span>` : `<span><b>${t}</b> conversaci${t === 1 ? 'ón' : 'ones'}</span>`;
+}
+function convsFiltradas() {
+  const q = norm(S.chat.q);
+  return S.chat.convs.filter(c => !!c.archivada === S.chat.verArchivadas &&
+      (!q || norm(`${c.titulo} ${c.clave} ${c.ultimoTexto} ${c.ultimoAutor}`).includes(q)))
+    .sort((a, b) => String(b.ultimo).localeCompare(String(a.ultimo)));
+}
+function htmlConvs() {
+  const lista = convsFiltradas();
+  if (!lista.length) {
+    if (S.chat.q) return '<div class="empty">Ninguna conversación coincide.</div>';
+    if (S.chat.verArchivadas) return '<div class="empty">No hay conversaciones archivadas.</div>';
+    return '<div class="empty">Aún no hay conversaciones.</div>';
+  }
+  return lista.map(c => {
+    const act = c.clave ? actDe(c.clave) : null;
+    const quien = c.ultimoAutor ? (c.ultimoAutor === S.user.nombre ? 'Tú' : c.ultimoAutor.split(' ')[0]) + ': ' : '';
+    const prev = c.ultimoTexto ? quien + c.ultimoTexto : 'Sin mensajes todavía';
+    const tag = c.clave ? (act ? `${act.id} · S${act.semana}` : c.clave) : '';
+    return `<button class="conv ${c.noLeidos ? 'unread' : ''}" data-conv="${esc(c.id)}" aria-current="${c.id === S.chat.abierta}">
+      <span class="conv-ico">${ico(c.clave ? 'tag' : 'chat')}</span>
+      <span class="conv-txt">
+        <span class="conv-t"><b>${esc(c.titulo)}</b><span class="conv-time">${esc(horaCorta(c.ultimo))}</span></span>
+        <span class="conv-prev"><span>${esc(prev)}</span>${c.noLeidos ? `<span class="unread-n" aria-label="${c.noLeidos} sin leer">${c.noLeidos}</span>` : ''}</span>
+        ${tag ? `<span class="conv-tag">${esc(tag)}</span>` : ''}
+      </span>
+    </button>`;
+  }).join('');
+}
+function htmlConvsFoot() {
+  const arch = S.chat.convs.filter(c => c.archivada).length;
+  if (S.chat.verArchivadas) return `<button class="btn btn-ghost sm" id="btnArch">${ico('back')}Volver a las activas</button>`;
+  return arch ? `<button class="btn btn-ghost sm" id="btnArch">${ico('archive')}Archivadas (${arch})</button>` : '';
+}
+function htmlChatVacio() {
+  const hay = S.chat.convs.some(c => !c.archivada);
+  return `<div class="chat-empty">
+    <span class="conv-ico">${ico('chat')}</span>
+    <p>${hay ? 'Elige una conversación de la lista.' : 'Inicia la primera conversación del equipo: un tema libre o una tarea del tablero.'}</p>
+    ${puedeEditar() ? `<button class="btn btn-primary" id="btnConvNueva2">${ico('plus')}Nueva conversación</button>` : ''}
+  </div>`;
+}
+function htmlChat(c) {
+  const act = c.clave ? actDe(c.clave) : null;
+  const tarea = !c.clave ? '' : act
+    ? `<button class="task-link" id="btnTarea" title="Abrir la tarea en el tablero"><i class="dot" data-e="${esc(act.estado)}"></i>${esc(act.id)} · Semana ${act.semana} · ${esc(act.estado)}</button>`
+    : `<span>Tarea ${esc(c.clave)} (ya no está en el tablero)</span>`;
+  const pub = !c.participantes || norm(c.participantes) === 'todos';
+  let pie;
+  if (!puedeEditar()) pie = '<div class="composer"><span class="hint">Tu usuario solo puede leer.</span></div>';
+  else if (c.archivada) pie = `<div class="composer"><span class="hint">Esta conversación está archivada.${puedeAjustarConv(c) ? ' Puedes reactivarla en Ajustes.' : ''}</span></div>`;
+  else pie = htmlComposer(c);
+  return `
+    <div class="chat-head">
+      <button class="btn btn-ghost btn-icon only-m" id="btnVolver" aria-label="Volver a la lista">${ico('back')}</button>
+      <div style="flex:1;min-width:0">
+        <h2 title="${esc(c.titulo)}">${esc(c.titulo)}</h2>
+        <div class="chat-sub">${tarea}<span class="vis">${ico(pub ? 'users' : 'lock')}${esc(textoParticipantes(c))}</span></div>
+      </div>
+      ${puedeAjustarConv(c) ? `<button class="btn btn-ghost btn-icon" id="btnConvEdit" aria-label="Ajustes de la conversación" title="Ajustes">${ico('edit')}</button>` : ''}
+    </div>
+    <div class="msgs" id="msgs" aria-live="polite">${S.chat.cargando ? '<div class="chat-empty">Cargando mensajes…</div>' : htmlMensajes(c.id)}</div>
+    <button class="btn btn-sec sm new-pill" id="btnNuevos" hidden>Mensajes nuevos ↓</button>
+    ${pie}`;
+}
+function htmlComposer(c) {
+  return `<div class="composer" id="composer">
+    <div class="tray" id="tray" ${trayDe(c.id).length ? '' : 'hidden'}>${htmlTray(c.id)}</div>
+    <div class="composer-row">
+      <button class="btn btn-ghost btn-icon" id="btnAdjuntar" aria-label="Adjuntar archivo" title="Adjuntar imagen, video o archivo. También puedes pegar una captura con Ctrl+V o arrastrar.">${ico('clip')}</button>
+      <input type="file" id="fileIn" multiple hidden accept="image/*,video/*,application/pdf,.doc,.docx,.xls,.xlsx,.csv,.ppt,.pptx,.zip,.txt">
+      <textarea class="textarea" id="msgIn" rows="1" maxlength="4000" placeholder="Escribe un mensaje o pega una captura">${esc(S.chat.borrador[c.id] || '')}</textarea>
+      <button class="btn btn-primary btn-icon" id="btnEnviar" aria-label="Enviar" title="Enviar (Enter)">${ico('send')}</button>
+    </div>
+  </div>`;
+}
+function htmlTray(id) {
+  return trayDe(id).map((t, i) => `<div class="tray-item" title="${esc(t.nombre)} · ${tamTxt(t.tam)}">
+      ${t.preview ? `<img src="${esc(t.preview)}" alt="">` : `${ico(t.tipo.startsWith('video/') ? 'video' : 'file')}<span class="fname">${esc(t.nombre)}</span>`}
+      <button class="x" data-quitar="${i}" aria-label="Quitar ${esc(t.nombre)}">${ico('x')}</button>
+    </div>`).join('');
+}
+function htmlAdjuntos(m) {
+  const adj = m.adjuntos || [];
+  if (!adj.length) return '';
+  const medios = adj.filter(esMedio), otros = adj.filter(a => !esMedio(a));
+  const ref = m.seq || m.tmp;
+  let h = '';
+  if (medios.length) {
+    h += `<div class="att-grid ${medios.length === 1 ? 'one' : ''}">${medios.map(a => {
+      const i = adj.indexOf(a), vid = a.tipo.startsWith('video/');
+      const ratio = medios.length === 1 && a.w && a.h ? ` style="aspect-ratio:${a.w}/${a.h}"` : '';
+      const remota = !a.local && !esDemoAdj(a);
+      const img = vid && !remota ? '' : `<img src="${esc(urlAdj(a, 'mini'))}" alt="${esc(a.nombre)}" loading="lazy"${remota ? ` onerror="nexoImgFalla(this,'${esc(a.id)}',640)"` : ''}>`;
+      return `<button class="att-img ${vid ? 'vid' : ''}" data-ver="${esc(ref)}:${i}"${ratio} aria-label="Ver ${esc(a.nombre)}">${img}${vid ? `<span class="att-play"><span>${ico('play')}</span></span>` : ''}</button>`;
+    }).join('')}</div>`;
+  }
+  h += otros.map(a => {
+    const href = a.local || esDemoAdj(a) ? '' : ` href="${esc(urlAdj(a, 'ver'))}" target="_blank" rel="noopener noreferrer"`;
+    return `<a class="att-file"${href}>${ico('file')}<span style="min-width:0"><b>${esc(a.nombre)}</b><span class="hint">${tamTxt(a.tam)}</span></span></a>`;
+  }).join('');
+  return h;
+}
+function htmlMensajes(id) {
+  const lista = S.chat.msgs[id] || [];
+  let h = '', dia = '', prev = null;
+  if (S.chat.hayMas[id]) h += '<button class="btn btn-ghost sm" id="btnAnteriores" style="align-self:center">Ver mensajes anteriores</button>';
+  if (!lista.length) h += '<div class="chat-empty"><p>Aún no hay mensajes.<br>Escribe el primero o pega una captura.</p></div>';
+  lista.forEach(m => {
+    const f = m.fecha || ahoraTxtS(), d = f.slice(0, 10);
+    if (d !== dia) { h += `<div class="day-sep">${esc(diaLargo(d))}</div>`; dia = d; prev = null; }
+    const mio = m.usuario === S.user.usuario;
+    const primero = !prev || prev.usuario !== m.usuario || minutosEntre(prev.fecha, f) > 10;
+    let meta = esc(f.slice(11, 16));
+    if (m.estado === 'sending') meta = esc(m.progreso || 'Enviando…');
+    if (m.estado === 'failed') meta = `<span style="color:var(--bad-tx)">No se envió</span> <button class="link" data-reintentar="${esc(m.tmp)}">Reintentar</button> <button class="link" data-descartar="${esc(m.tmp)}" style="color:var(--muted)">Descartar</button>`;
+    const borrar = !m.eliminado && m.seq && puedeEditar() && (mio || esAdmin())
+      ? `<button class="msg-opt" data-borrar="${m.seq}" aria-label="Eliminar mensaje" title="Eliminar">${ico('trash')}</button>` : '';
+    h += `<div class="msg ${mio ? 'mine' : ''} ${primero ? 'first' : ''} ${m.estado || ''}">
+      ${mio ? '' : `<span class="avatar" title="${esc(m.nombre)}">${esc(iniciales(m.nombre))}</span>`}
+      <div class="bubble">
+        ${primero && !mio ? `<span class="msg-name">${esc(m.nombre)}</span>` : ''}
+        ${m.eliminado ? '<span class="msg-del">Mensaje eliminado</span>' : htmlAdjuntos(m) + (m.texto ? `<div class="msg-txt">${enlazar(m.texto)}</div>` : '')}
+        <span class="msg-meta">${borrar}${meta}</span>
+      </div>
+    </div>`;
+    prev = { usuario: m.usuario, fecha: f };
+  });
+  return h;
+}
+
+/* ── Eventos ─────────────────────────────────────────────── */
+function bindChat() {
+  const cq = $('#cq');
+  cq.oninput = () => { S.chat.q = cq.value; pintarLista(); };
+  ['#btnConvNueva', '#btnConvNueva2'].forEach(s => { const b = $(s); if (b) b.onclick = () => abrirAjustesConv(null); });
+  bindLista();
+  bindPanelChat();
+}
+function bindLista() {
+  document.querySelectorAll('[data-conv]').forEach(b => b.onclick = () => abrirConv(b.dataset.conv));
+  const ba = $('#btnArch'); if (ba) ba.onclick = () => { S.chat.verArchivadas = !S.chat.verArchivadas; pintarLista(); };
+}
+function pintarLista() {
+  const l = $('#convs'); if (!l) return;
+  const top = l.scrollTop;
+  l.innerHTML = htmlConvs(); l.scrollTop = top;
+  $('#convsFoot').innerHTML = htmlConvsFoot();
+  const st = $('#chatStats'); if (st) st.innerHTML = htmlStatsChat();
+  bindLista();
+}
+function bindPanelChat() {
+  const v = $('#btnVolver'); if (v) v.onclick = () => { S.chat.abierta = null; renderMain(); };
+  const n2 = $('#btnConvNueva2'); if (n2) n2.onclick = () => abrirAjustesConv(null);
+  const c = convDe(S.chat.abierta); if (!c) return;
+  const be = $('#btnConvEdit'); if (be) be.onclick = () => abrirAjustesConv(c.id);
+  const bt = $('#btnTarea'); if (bt) bt.onclick = () => irATarea(c.clave);
+  const msgs = $('#msgs');
+  msgs.onscroll = () => {
+    S.chat.pegadoAbajo = msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight < 120;
+    if (S.chat.pegadoAbajo) $('#btnNuevos').hidden = true;
+  };
+  msgs.addEventListener('load', () => { if (S.chat.pegadoAbajo) msgs.scrollTop = msgs.scrollHeight; }, true);
+  $('#btnNuevos').onclick = () => { msgs.scrollTop = msgs.scrollHeight; };
+  bindMensajes();
+  const inp = $('#msgIn');
+  if (inp) {
+    autoAlto(inp);
+    inp.oninput = () => { S.chat.borrador[c.id] = inp.value; autoAlto(inp); };
+    inp.onkeydown = e => {
+      const tactil = matchMedia('(hover:none)').matches;
+      if (e.key === 'Enter' && !e.shiftKey && !tactil && !e.isComposing) { e.preventDefault(); enviar(); }
+    };
+    inp.onpaste = e => {
+      const files = [...(e.clipboardData && e.clipboardData.files || [])];
+      if (files.length) { e.preventDefault(); agregarArchivos(files, true); }
+    };
+    $('#btnEnviar').onclick = enviar;
+    const fi = $('#fileIn');
+    $('#btnAdjuntar').onclick = () => fi.click();
+    fi.onchange = () => { agregarArchivos([...fi.files]); fi.value = ''; };
+    bindTray();
+    const chat = $('#chat');
+    let cont = 0;
+    chat.ondragenter = e => { if (!hayArchivos(e)) return; e.preventDefault(); cont++; mostrarDrop(true); };
+    chat.ondragover = e => { if (hayArchivos(e)) e.preventDefault(); };
+    chat.ondragleave = () => { cont = Math.max(0, cont - 1); if (!cont) mostrarDrop(false); };
+    chat.ondrop = e => { if (!hayArchivos(e)) return; e.preventDefault(); cont = 0; mostrarDrop(false); agregarArchivos([...e.dataTransfer.files]); };
+  }
+}
+const hayArchivos = e => e.dataTransfer && [...(e.dataTransfer.types || [])].includes('Files');
+function mostrarDrop(si) {
+  const chat = $('#chat'); if (!chat) return;
+  let d = chat.querySelector('.drop-over');
+  if (si && !d) { d = document.createElement('div'); d.className = 'drop-over'; d.textContent = 'Suelta los archivos para adjuntarlos'; chat.appendChild(d); }
+  if (!si && d) d.remove();
+}
+function autoAlto(t) { t.style.height = 'auto'; t.style.height = Math.min(160, Math.max(t.scrollHeight + 2, 40)) + 'px'; }
+function bindMensajes() {
+  const c = convDe(S.chat.abierta); if (!c) return;
+  const lista = () => S.chat.msgs[c.id] || [];
+  document.querySelectorAll('[data-ver]').forEach(b => b.onclick = () => {
+    const [ref, i] = b.dataset.ver.split(':');
+    const m = lista().find(x => String(x.seq || x.tmp) === ref);
+    if (m) abrirVisor(m, Number(i));
+  });
+  document.querySelectorAll('[data-borrar]').forEach(b => b.onclick = () => borrarMensaje(Number(b.dataset.borrar)));
+  document.querySelectorAll('[data-reintentar]').forEach(b => b.onclick = () => {
+    const m = lista().find(x => x.tmp === b.dataset.reintentar);
+    if (m) { m.estado = 'sending'; m.progreso = ''; pintarMensajes(); procesarEnvio(m); }
+  });
+  document.querySelectorAll('[data-descartar]').forEach(b => b.onclick = () => {
+    S.chat.msgs[c.id] = lista().filter(x => x.tmp !== b.dataset.descartar); pintarMensajes();
+  });
+  const ant = $('#btnAnteriores'); if (ant) ant.onclick = cargarAnteriores;
+}
+function pintarMensajes(abajo) {
+  const el = $('#msgs'), id = S.chat.abierta; if (!el || !id) return;
+  const cerca = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+  el.innerHTML = htmlMensajes(id);
+  bindMensajes();
+  if (abajo || cerca) { el.scrollTop = el.scrollHeight; S.chat.pegadoAbajo = true; }
+  else if ($('#btnNuevos')) $('#btnNuevos').hidden = false;
+}
+function bindTray() {
+  document.querySelectorAll('[data-quitar]').forEach(b => b.onclick = () => {
+    const t = trayDe(S.chat.abierta).splice(Number(b.dataset.quitar), 1)[0];
+    if (t && t.preview) URL.revokeObjectURL(t.preview);
+    pintarTray();
+  });
+}
+function pintarTray() {
+  const tr = $('#tray'), id = S.chat.abierta; if (!tr || !id) return;
+  tr.innerHTML = htmlTray(id); tr.hidden = !trayDe(id).length; bindTray();
+}
+
+/* ── Abrir, cargar y navegar ─────────────────────────────── */
+async function abrirConv(id) {
+  const c = convDe(id); if (!c) return;
+  S.chat.abierta = id; S.chat.cargando = !S.chat.msgs[id]; S.chat.pegadoAbajo = true;
+  c.noLeidos = 0; pintarNavCount();
+  if (S.vista !== 'chat') { S.vista = 'chat'; render(); } else renderMain();
+  const el = $('#msgs'); if (el) el.scrollTop = el.scrollHeight;
+  if (!matchMedia('(hover:none)').matches && $('#msgIn')) $('#msgIn').focus();
+  let r;
+  try { r = await api('chatAbrir', { id }); } catch (_) { r = null; }
+  if (S.chat.abierta !== id || S.vista !== 'chat') return;
+  S.chat.cargando = false;
+  if (!r || !r.ok) {
+    if (r && r.error === 'NOEXISTE') { S.chat.convs = S.chat.convs.filter(x => x.id !== id); S.chat.abierta = null; renderMain(); }
+    else pintarMensajes(true);
+    toast(r ? r.mensaje : 'Sin conexión. No se pudieron cargar los mensajes.', 'bad');
+    return;
+  }
+  const pend = (S.chat.msgs[id] || []).filter(m => m.tmp);
+  S.chat.msgs[id] = r.mensajes.concat(pend).sort(ordenMsgs);
+  S.chat.hayMas[id] = r.hayMas;
+  actualizarConv(Object.assign(r.conversacion, { noLeidos: 0 }));
+  pintarMensajes(true); pintarLista(); pintarNavCount();
+}
+async function cargarAnteriores() {
+  const id = S.chat.abierta, lista = S.chat.msgs[id] || [];
+  const min = lista.reduce((m, x) => x.seq ? Math.min(m, x.seq) : m, Infinity);
+  if (!isFinite(min)) return;
+  const b = $('#btnAnteriores'); if (b) { b.disabled = true; b.textContent = 'Cargando…'; }
+  const r = await api('chatAbrir', { id, antesDe: min }).catch(() => null);
+  if (!r || !r.ok || S.chat.abierta !== id) { if (b) { b.disabled = false; b.textContent = 'Ver mensajes anteriores'; } return; }
+  const el = $('#msgs'), alto = el.scrollHeight;
+  S.chat.msgs[id] = r.mensajes.concat(lista).sort(ordenMsgs);
+  S.chat.hayMas[id] = r.hayMas;
+  el.innerHTML = htmlMensajes(id); bindMensajes();
+  el.scrollTop = el.scrollHeight - alto;
+}
+function actualizarConv(c) {
+  const i = S.chat.convs.findIndex(x => x.id === c.id);
+  if (i >= 0) S.chat.convs[i] = Object.assign({}, S.chat.convs[i], c); else S.chat.convs.push(c);
+}
+function irATarea(k) {
+  const a = actDe(k); if (!a) return;
+  S.vista = 'tablero'; S.semana = a.semana;
+  render(); abrirEditor(k);
+}
+
+/* ── Adjuntos ────────────────────────────────────────────── */
+function agregarArchivos(files, pegado) {
+  const id = S.chat.abierta; if (!id || !files.length) return;
+  const tray = trayDe(id);
+  files.forEach(f => {
+    const tipo = f.type || 'application/octet-stream';
+    const img = /^image\//.test(tipo);
+    if (!img && f.size > MAX_MB_ADJUNTO * 1048576) {
+      toast(`${f.name} pesa ${tamTxt(f.size)}. El límite es ${MAX_MB_ADJUNTO} MB: súbelo a Drive y pega el enlace.`, 'bad');
+      return;
+    }
+    if (tray.length >= 10) { toast('Máximo 10 archivos por mensaje.', 'info'); return; }
+    let nombre = f.name || 'archivo';
+    if (pegado && img && /^image\.\w+$/i.test(nombre)) nombre = `Captura ${ahoraTxt().replace(':', '.')}.${(tipo.split('/')[1] || 'png').replace('jpeg', 'jpg')}`;
+    tray.push({ file: f, nombre, tipo, tam: f.size, preview: img ? URL.createObjectURL(f) : (tipo.startsWith('video/') ? URL.createObjectURL(f) : '') });
+  });
+  pintarTray();
+  const inp = $('#msgIn'); if (inp) inp.focus();
+}
+function cargarImagen(file) {
+  return new Promise((ok, mal) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); ok(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); mal(new Error('No se pudo leer la imagen ' + file.name)); };
+    img.src = url;
+  });
+}
+/** Reduce la imagen (lado mayor 1920 px, JPEG 85 %) para que suba rápido sin perder legibilidad. */
+async function comprimirImagen(file) {
+  const img = await cargarImagen(file);
+  const w0 = img.naturalWidth, h0 = img.naturalHeight;
+  const k = Math.min(1, LADO_MAX_IMG / Math.max(w0, h0));
+  const w = Math.round(w0 * k), h = Math.round(h0 * k);
+  if (k === 1 && file.size <= 400 * 1024) return { blob: file, w, h, tipo: file.type };
+  const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+  const cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, w, h); cx.drawImage(img, 0, 0, w, h);
+  const blob = await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.85));
+  if (!blob || (k === 1 && blob.size >= file.size)) return { blob: file, w, h, tipo: file.type };
+  return { blob, w, h, tipo: 'image/jpeg' };
+}
+const aBase64 = blob => new Promise((ok, mal) => {
+  const r = new FileReader();
+  r.onload = () => ok(String(r.result).split(',')[1] || '');
+  r.onerror = () => mal(new Error('No se pudo leer el archivo.'));
+  r.readAsDataURL(blob);
+});
+async function prepararArchivo(t) {
+  let blob = t.file, tipo = t.tipo, nombre = t.nombre, w = 0, h = 0;
+  if (/^image\/(png|jpeg|webp|bmp)$/.test(tipo)) {
+    const r = await comprimirImagen(t.file);
+    blob = r.blob; w = r.w; h = r.h;
+    if (r.tipo !== tipo) { tipo = r.tipo; nombre = nombre.replace(/\.\w+$/, '') + '.jpg'; }
+  }
+  if (blob.size > MAX_MB_ADJUNTO * 1048576) throw new Error(`${t.nombre} pesa ${tamTxt(blob.size)}. El límite es ${MAX_MB_ADJUNTO} MB: súbelo a Drive y pega el enlace.`);
+  return { nombre, tipo, w, h, base64: await aBase64(blob) };
+}
+
+/* ── Enviar ──────────────────────────────────────────────── */
+async function enviar() {
+  const c = convDe(S.chat.abierta), inp = $('#msgIn'); if (!c || !inp) return;
+  const texto = inp.value.trim(), tray = trayDe(c.id).splice(0);
+  if (!texto && !tray.length) { inp.focus(); return; }
+  inp.value = ''; S.chat.borrador[c.id] = ''; autoAlto(inp); pintarTray(); inp.focus();
+  const m = {
+    tmp: 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    usuario: S.user.usuario, nombre: S.user.nombre, fecha: ahoraTxtS(), texto,
+    adjuntos: tray.map(t => ({ id: '', nombre: t.nombre, tipo: t.tipo, tam: t.tam, local: t.preview || '' })),
+    estado: 'sending', _tray: tray, _conv: c.id
+  };
+  (S.chat.msgs[c.id] = S.chat.msgs[c.id] || []).push(m);
+  pintarMensajes(true);
+  await procesarEnvio(m);
+}
+async function procesarEnvio(m) {
+  S.chat.enviando++;
+  const pintar = () => { if (S.chat.abierta === m._conv) pintarMensajes(); };
+  try {
+    const adj = [];
+    for (let i = 0; i < m._tray.length; i++) {
+      const t = m._tray[i];
+      if (!t.subido) {
+        m.progreso = m._tray.length > 1 ? `Subiendo ${i + 1} de ${m._tray.length}…` : 'Subiendo…'; pintar();
+        const r = await api('chatSubir', { datos: await prepararArchivo(t) });
+        if (!r.ok) throw new Error(r.mensaje || 'No se pudo subir ' + t.nombre);
+        t.subido = r.adjunto;
+      }
+      adj.push(t.subido);
+    }
+    m.progreso = 'Enviando…'; pintar();
+    const r = await api('chatEnviar', { id: m._conv, texto: m.texto, adjuntos: adj });
+    if (!r.ok) throw new Error(r.mensaje || 'No se envió el mensaje.');
+    const real = r.mensaje;
+    real.adjuntos.forEach((a, k) => { if (m.adjuntos[k] && m.adjuntos[k].local) a.local = m.adjuntos[k].local; }); // evita parpadeo mientras Drive genera la miniatura
+    const lista = S.chat.msgs[m._conv] || [];
+    const i = lista.indexOf(m);
+    if (i >= 0) { if (lista.some(x => x.seq === real.seq)) lista.splice(i, 1); else lista.splice(i, 1, real); }
+    actualizarConv(r.conversacion);
+    pintar(); if (S.vista === 'chat') pintarLista();
+  } catch (e) {
+    m.estado = 'failed'; pintar();
+    toast(/fetch|network/i.test(e.message) ? 'Sin conexión. El mensaje no se envió.' : e.message, 'bad');
+  } finally { S.chat.enviando--; }
+}
+function borrarMensaje(seq) {
+  abrirModal(`<div class="modal-box sm" role="alertdialog" aria-modal="true" aria-labelledby="dmt">
+    <div class="modal-head"><h2 id="dmt">¿Eliminar este mensaje?</h2>
+      <p class="hint">Se quita para todos. Si tiene archivos, también se borran de la carpeta de Drive.</p></div>
+    <div class="modal-foot"><button class="btn btn-ghost" data-close>Cancelar</button><button class="btn btn-primary" id="dmOk" style="background:#DC2626">Eliminar</button></div></div>`, true);
+  $('#dmOk').onclick = async () => {
+    cerrarModal();
+    const m = (S.chat.msgs[S.chat.abierta] || []).find(x => x.seq === seq); if (!m) return;
+    const copia = { ...m };
+    Object.assign(m, { eliminado: true, texto: '', adjuntos: [] }); pintarMensajes();
+    const r = await guardar(() => api('chatEliminarMsg', { seq }));
+    if (!r.ok) { Object.assign(m, copia); pintarMensajes(); if (r.mensaje) toast(r.mensaje, 'bad'); }
+  };
+}
+
+/* ── Visor de imágenes y videos ──────────────────────────── */
+function abrirVisor(m, i) {
+  const medios = (m.adjuntos || []).filter(esMedio);
+  let k = Math.max(0, medios.indexOf(m.adjuntos[i]));
+  const v = document.createElement('div');
+  v.className = 'viewer'; v.setAttribute('role', 'dialog'); v.setAttribute('aria-modal', 'true'); v.setAttribute('aria-label', 'Vista de archivo');
+  const cerrar = () => { v.remove(); document.removeEventListener('keydown', teclas, true); };
+  const mover = d => { if (medios.length > 1) { k = (k + d + medios.length) % medios.length; pintar(); } };
+  const teclas = e => {
+    if (e.key === 'Escape') { e.stopImmediatePropagation(); e.preventDefault(); cerrar(); }
+    else if (e.key === 'ArrowRight') mover(1); else if (e.key === 'ArrowLeft') mover(-1);
+  };
+  function pintar() {
+    const a = medios[k], vid = a.tipo.startsWith('video/'), remota = !a.local && !esDemoAdj(a);
+    const cont = vid
+      ? (remota ? `<iframe src="${esc(urlAdj(a, 'video'))}" allow="autoplay; fullscreen" allowfullscreen title="${esc(a.nombre)}"></iframe>`
+                : `<video src="${esc(urlAdj(a, 'video'))}" controls autoplay playsinline></video>`)
+      : `<img src="${esc(urlAdj(a, 'grande'))}" alt="${esc(a.nombre)}"${remota ? ` onerror="nexoImgFalla(this,'${esc(a.id)}',2000)"` : ''}>`;
+    v.innerHTML = `
+      <div class="viewer-bar">
+        <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(a.nombre)} · <span style="color:#94A3B8">${esc(m.nombre)}, ${esc(horaCorta(m.fecha))}</span></span>
+        ${medios.length > 1 ? `<span style="color:#94A3B8">${k + 1} / ${medios.length}</span>` : ''}
+        ${remota ? `<a class="btn btn-ghost sm" href="${esc(urlAdj(a, 'ver'))}" target="_blank" rel="noopener noreferrer">Abrir en Drive ${ico('external')}</a>` : ''}
+        <button class="btn btn-ghost btn-icon" data-x aria-label="Cerrar">${ico('x')}</button>
+      </div>
+      <div class="viewer-body" data-fondo>
+        ${medios.length > 1 ? `<button class="viewer-nav" data-mov="-1" aria-label="Anterior">${ico('back')}</button>` : ''}
+        ${cont}
+        ${medios.length > 1 ? `<button class="viewer-nav" data-mov="1" aria-label="Siguiente">${ico('chevron')}</button>` : ''}
+      </div>`;
+    v.querySelector('[data-x]').onclick = cerrar;
+    v.querySelector('[data-fondo]').onclick = e => { if (e.target.hasAttribute('data-fondo')) cerrar(); };
+    v.querySelectorAll('[data-mov]').forEach(b => b.onclick = () => mover(Number(b.dataset.mov)));
+  }
+  pintar();
+  document.body.appendChild(v);
+  document.addEventListener('keydown', teclas, true);
+  v.querySelector('[data-x]').focus();
+}
+
+/* ── Nueva conversación / ajustes ────────────────────────── */
+function abrirAjustesConv(id) {
+  const c = id ? convDe(id) : null;
+  if (id && !c) return;
+  S.chat.editar = { id: c ? c.id : null, version: c ? c.version : null, clave: c ? c.clave : '', tituloAuto: '' };
+  cerrarCapas();
+  const todos = c ? (!c.participantes || norm(c.participantes) === 'todos') : true;
+  const elegidos = todos ? [] : c.participantes.split(',').map(x => x.trim());
+  const wrap = document.createElement('div');
+  wrap.id = 'capa';
+  wrap.innerHTML = `
+  <div class="backdrop" data-close></div>
+  <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="cvT">
+    <div class="drawer-head"><h2 id="cvT">${c ? 'Ajustes de la conversación' : 'Nueva conversación'}</h2>
+      <button class="btn btn-ghost btn-icon" data-close aria-label="Cerrar">${ico('x')}</button></div>
+    <form class="drawer-body" id="cvForm" novalidate>
+      ${c ? (c.clave ? `<div class="meta"><span>Vinculada a la tarea <b>${esc(c.clave)}</b></span></div>` : '') : `
+      <div class="field"><span class="label">¿Sobre qué es?</span>
+        <div class="seg" data-cseg="tipo">
+          <button type="button" data-val="libre" aria-pressed="true">Tema libre</button>
+          <button type="button" data-val="tarea" aria-pressed="false">Una tarea del tablero</button>
+        </div></div>
+      <div class="field" id="cvTareaBox" hidden>
+        <label class="label" for="cvTq">Tarea</label>
+        <input class="input" id="cvTq" placeholder="Busca por ID, nombre o responsable" autocomplete="off">
+        <div class="picker" id="cvPick"></div>
+      </div>`}
+      <div class="field"><label class="label" for="cvTit">Título</label>
+        <input class="input" id="cvTit" maxlength="120" value="${esc(c ? c.titulo : '')}" placeholder="Ej. Campaña Buen Fin AFZ">
+        ${c ? '' : '<span class="hint" id="cvTitHint">Si eliges una tarea, se usa su nombre (puedes cambiarlo).</span>'}</div>
+      <div class="field"><span class="label">¿Quién participa?</span>
+        <div class="seg" data-cseg="vis">
+          <button type="button" data-val="todos" aria-pressed="${todos}">Todo el equipo</button>
+          <button type="button" data-val="elegir" aria-pressed="${!todos}">Elegir personas</button>
+        </div>
+        <div class="personas" id="cvPersonas" ${todos ? 'hidden' : ''}>
+          ${S.usuarios.map(u => {
+            const fijo = u.usuario === (c ? c.creadoPor : S.user.usuario);
+            return `<label class="persona"><input type="checkbox" value="${esc(u.usuario)}" ${elegidos.includes(u.usuario) || fijo ? 'checked' : ''} ${fijo ? 'disabled' : ''}>
+              <span class="avatar">${esc(iniciales(u.nombre))}</span><span>${esc(u.nombre)}${fijo ? ` <span class="hint">(${c && c.creadoPor !== S.user.usuario ? 'la creó' : 'tú'})</span>` : ''}</span></label>`;
+          }).join('')}
+          <span class="hint">Solo las personas marcadas verán la conversación.</span>
+        </div>
+      </div>
+      <span class="err-text" id="cvErr" hidden></span>
+      ${c ? `<div class="meta"><span>Creada por <b>${esc(nombreDe(c.creadoPor))}</b> · ${esc(String(c.creado).slice(0, 16))}</span><span>${c.n} mensaje${c.n === 1 ? '' : 's'}</span></div>` : ''}
+    </form>
+    <div class="drawer-foot">
+      ${c ? `<button class="btn btn-ghost" id="cvArch" type="button">${ico('archive')}${c.archivada ? 'Reactivar' : 'Archivar'}</button>` : ''}
+      <span class="spacer"></span>
+      <button class="btn btn-ghost" data-close type="button">Cancelar</button>
+      <button class="btn btn-primary" id="cvSave" type="button">${c ? 'Guardar cambios' : 'Crear conversación'}</button>
+    </div>
+  </aside>`;
+  document.body.appendChild(wrap);
+  const cerrar = () => { S.chat.editar = null; cerrarCapas(); };
+  wrap.querySelectorAll('[data-close]').forEach(b => b.onclick = cerrar);
+  wrap.querySelectorAll('[data-cseg]').forEach(seg => seg.onclick = e => {
+    const b = e.target.closest('button'); if (!b) return;
+    seg.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    if (seg.dataset.cseg === 'vis') $('#cvPersonas').hidden = b.dataset.val === 'todos';
+    if (seg.dataset.cseg === 'tipo') {
+      const tarea = b.dataset.val === 'tarea';
+      $('#cvTareaBox').hidden = !tarea;
+      if (tarea) { pintarPicker(); $('#cvTq').focus(); }
+      else { if ($('#cvTit').value === S.chat.editar.tituloAuto) $('#cvTit').value = ''; S.chat.editar.clave = ''; S.chat.editar.tituloAuto = ''; }
+    }
+    $('#cvErr').hidden = true;
+  });
+  const tq = $('#cvTq'); if (tq) tq.oninput = pintarPicker;
+  $('#cvSave').onclick = guardarConv;
+  $('#cvForm').onsubmit = e => { e.preventDefault(); guardarConv(); };
+  const ar = $('#cvArch'); if (ar) ar.onclick = () => archivarConv(c);
+  setTimeout(() => { const t = $('#cvTit'); if (t && !c) t.focus(); }, 0);
+}
+function pintarPicker() {
+  const box = $('#cvPick'); if (!box) return;
+  const q = norm($('#cvTq').value), sel = S.chat.editar.clave, actual = semanaISO();
+  const lista = S.acts.filter(a => !q || norm(`${a.id} ${a.tarea} ${a.responsable} s${a.semana}`).includes(q))
+    .sort((a, b) => (b.semana === actual) - (a.semana === actual) || b.semana - a.semana || a.orden - b.orden)
+    .slice(0, 30);
+  box.innerHTML = lista.length ? lista.map(a => `<button type="button" class="pick" data-pick="${esc(a.clave)}" aria-pressed="${a.clave === sel}">
+      <span class="mono">${esc(a.id)} · Semana ${a.semana}${a.responsable ? ' · ' + esc(a.responsable) : ''}</span>
+      <span class="pick-t">${esc(a.tarea)}</span></button>`).join('')
+    : '<div class="empty" style="padding:24px 16px">Ninguna tarea coincide.</div>';
+  box.querySelectorAll('[data-pick]').forEach(b => b.onclick = () => {
+    const a = actDe(b.dataset.pick); if (!a) return;
+    const tit = $('#cvTit');
+    if (!tit.value.trim() || tit.value === S.chat.editar.tituloAuto) { tit.value = a.tarea.slice(0, 120); S.chat.editar.tituloAuto = tit.value; }
+    S.chat.editar.clave = a.clave; $('#cvErr').hidden = true;
+    pintarPicker();
+  });
+}
+function leerAjustesConv() {
+  const seg = n => { const b = document.querySelector(`[data-cseg="${n}"] [aria-pressed="true"]`); return b ? b.dataset.val : ''; };
+  let participantes = 'Todos';
+  if (seg('vis') === 'elegir') participantes = [...document.querySelectorAll('#cvPersonas input:checked')].map(x => x.value).join(',');
+  return { titulo: $('#cvTit').value.trim(), participantes, tipo: seg('tipo') };
+}
+async function guardarConv() {
+  const ed = S.chat.editar, b = $('#cvSave'), err = $('#cvErr');
+  const d = leerAjustesConv();
+  const falla = m => { err.textContent = m; err.hidden = false; };
+  if (!ed.id && d.tipo === 'tarea' && !ed.clave) return falla('Elige la tarea de la lista.');
+  if (!d.titulo && !(d.tipo === 'tarea' && ed.clave)) return falla('Escribe de qué trata la conversación.');
+  if (d.participantes !== 'Todos' && d.participantes.split(',').filter(Boolean).length < 2) return falla('Elige al menos a otra persona.');
+  b.disabled = true; b.textContent = 'Guardando…';
+  const r = ed.id
+    ? await guardar(() => api('chatEditar', { id: ed.id, version: ed.version, datos: { titulo: d.titulo, participantes: d.participantes } }))
+    : await guardar(() => api('chatCrear', { datos: { titulo: d.titulo, participantes: d.participantes, clave: d.tipo === 'tarea' ? ed.clave : '' } }));
+  if (r.ok || r.error === 'EXISTE') {
+    actualizarConv(r.conversacion);
+    const nueva = !ed.id;
+    S.chat.editar = null; cerrarCapas();
+    if (r.error === 'EXISTE') toast('Esa tarea ya tenía conversación; aquí está.', 'info');
+    else toast(nueva ? 'Conversación creada' : 'Cambios guardados');
+    if (nueva) { if (!S.chat.msgs[r.conversacion.id]) S.chat.msgs[r.conversacion.id] = r.error === 'EXISTE' ? undefined : []; abrirConv(r.conversacion.id); }
+    else renderMain();
+  } else {
+    b.disabled = false; b.textContent = ed.id ? 'Guardar cambios' : 'Crear conversación';
+    if (r.conversacion) actualizarConv(r.conversacion);
+    falla(r.mensaje || 'No se pudo guardar.');
+  }
+}
+async function archivarConv(c) {
+  const r = await guardar(() => api('chatEditar', { id: c.id, version: S.chat.editar.version, datos: { archivada: !c.archivada } }));
+  if (!r.ok) { const e = $('#cvErr'); if (e) { e.textContent = r.mensaje || 'No se pudo cambiar.'; e.hidden = false; } else toast(r.mensaje || 'No se pudo cambiar.', 'bad'); return; }
+  actualizarConv(r.conversacion);
+  S.chat.editar = null; cerrarCapas();
+  if (r.conversacion.archivada) { S.chat.abierta = null; toast('Conversación archivada', 'ok', { txt: 'Deshacer', fn: () => { S.chat.editar = { version: r.conversacion.version }; archivarConv(r.conversacion); } }); }
+  else { S.chat.verArchivadas = false; toast('Conversación reactivada'); }
+  renderMain(); pintarNavCount();
+}
+
+/* ── Sincronización del chat ─────────────────────────────── */
+let chatTick = 0, chatOcupado = false;
+async function sincronizarChat(forzar) {
+  if (!S.token || !S.user || document.hidden || chatOcupado || S.chat.enviando || S.chat.cargando) return;
+  const enVista = S.vista === 'chat';
+  chatTick++;
+  if (forzar !== true && !enVista && chatTick % Math.round(SEG_CHAT_FONDO / SEG_CHAT_ABIERTO) !== 0) return;
+  chatOcupado = true;
+  try {
+    const id = enVista ? S.chat.abierta : null;
+    const desde = id ? (S.chat.msgs[id] || []).reduce((m, x) => Math.max(m, x.seq || 0), 0) : 0;
+    const r = await api('chatPoll', { revChat: S.chat.revChat, conv: id, desde });
+    if (!r.ok || !r.cambios) return;
+    if (S.chat.enviando) return; // se vuelve a pedir en la siguiente vuelta
+    S.chat.revChat = r.revChat;
+    if (r.conversaciones) {
+      if (id) { const c = r.conversaciones.find(x => x.id === id); if (c) c.noLeidos = 0; }
+      S.chat.convs = r.conversaciones;
+    }
+    if (id && r.mensajes && S.chat.abierta === id) {
+      const cur = S.chat.msgs[id] || [];
+      let cambio = false;
+      r.mensajes.forEach(m => { if (!cur.some(x => x.seq === m.seq)) { cur.push(m); cambio = true; } });
+      (r.eliminados || []).forEach(s => { const x = cur.find(y => y.seq === s); if (x && !x.eliminado) { Object.assign(x, { eliminado: true, texto: '', adjuntos: [] }); cambio = true; } });
+      S.chat.msgs[id] = cur.sort(ordenMsgs);
+      if (cambio && S.vista === 'chat') pintarMensajes();
+    }
+    if (S.vista === 'chat') {
+      if (S.chat.abierta && !convDe(S.chat.abierta)) { S.chat.abierta = null; renderMain(); }
+      else pintarLista();
+    }
+    pintarNavCount();
+  } catch (_) { /* sin conexión: se reintenta en la siguiente vuelta */ }
+  finally { chatOcupado = false; }
+}
+
+/* ════════════════════════════════════════════════════════════
    SINCRONIZACIÓN
    ════════════════════════════════════════════════════════════ */
 async function iniciar() {
@@ -1428,6 +2266,7 @@ async function iniciar() {
   render();
   await recargar();
   if (!window.__nexoSync) window.__nexoSync = setInterval(sincronizar, SEGUNDOS_SYNC * 1000);
+  if (!window.__nexoChat) window.__nexoChat = setInterval(sincronizarChat, SEG_CHAT_ABIERTO * 1000);
 }
 function elegirSemana() {
   const s = semanas();
@@ -1440,9 +2279,11 @@ async function recargar() {
     const r = await api('bootstrap');
     if (!r.ok) return;
     S.user = r.usuario; S.usuarios = r.usuarios; S.acts = r.actividades; S.docs = r.documentos || []; S.rev = r.rev;
+    S.chat.convs = r.conversaciones || []; S.chat.revChat = r.revChat || 0; pintarNavCount();
     try { localStorage.setItem('nexo_user', JSON.stringify(r.usuario)); } catch (_) {}
     elegirSemana();
     if (S.vista === 'tablero') repintarTablero(); else if (S.vista === 'biblioteca') repintarBib();
+    else if (S.vista === 'chat') { if (S.chat.abierta && convDe(S.chat.abierta)) abrirConv(S.chat.abierta); else { S.chat.abierta = null; renderMain(); } }
   } catch (_) { setSync('error'); toast('No hay conexión con el servidor.', 'bad'); }
 }
 let sincronizando = false;
@@ -1465,11 +2306,11 @@ async function sincronizar() {
   } catch (_) { setSync('error'); }
   sincronizando = false;
 }
-document.addEventListener('visibilitychange', () => { if (!document.hidden) sincronizar(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { sincronizar(); sincronizarChat(true); } });
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     if ($('#modal')) { if ($('#modal').dataset.imp) cerrarImportar(); else cerrarModal(); }
-    else if ($('#capa')) { if (S.docEdit) { S.docEdit = null; cerrarCapas(); } else cerrarEditor(); }
+    else if ($('#capa')) { if (S.docEdit) { S.docEdit = null; cerrarCapas(); } else if (S.chat.editar) { S.chat.editar = null; cerrarCapas(); } else cerrarEditor(); }
   }
   if (e.key === '/' && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName) && $('#q') && !$('#capa') && !$('#modal')) { e.preventDefault(); $('#q').focus(); }
 });
@@ -1508,7 +2349,65 @@ const Demo = (() => {
       mk('MKT37', 'Terminar el manual de packaging para almacén', 'Proyecto', 'Luis Segura', d(3), '', 'En proceso', '70', 'Instrucciones y fotos listas; falta edición.', 'Manual terminado al 100%', 'Minuta')
     ] };
   }
-  const cargar = () => { if (mem) return mem; try { const x = JSON.parse(localStorage.getItem(KEY)); if (x && x.acts) return (mem = x); } catch (_) {} return (mem = semilla()); };
+  /* Conversaciones de ejemplo */
+  function semillaChat(db) {
+    const hoy = hoyISO(), ayer = (() => { const f = new Date(); f.setDate(f.getDate() - 1); return iso(f); })();
+    const k37 = (db.acts.find(a => a.id === 'MKT37') || {}).clave || '';
+    db.convs = [
+      { id: 'C-1', titulo: 'Campaña Buen Fin AFZ', clave: '', participantes: 'Todos', creadoPor: 'admin', creado: ayer + ' 09:10:00', archivada: false, version: 1 },
+      { id: 'C-2', titulo: 'Terminar el manual de packaging para almacén', clave: k37, participantes: 'admin,luis', creadoPor: 'admin', creado: ayer + ' 16:00:00', archivada: false, version: 1 },
+      { id: 'C-3', titulo: 'Seguimiento preguntas Mercado Libre', clave: '', participantes: 'admin,julio', creadoPor: 'julio', creado: hoy + ' 08:30:00', archivada: false, version: 1 }
+    ];
+    const M = (conv, usuario, fecha, texto) => ({ conv, usuario, nombre: USERS.find(u => u.usuario === usuario).nombre, fecha, texto, adjuntos: [], eliminado: false });
+    db.msgs = [
+      M('C-1', 'admin', ayer + ' 09:12:00', 'Arrancamos con la campaña del Buen Fin. Aquí ponemos mockups, copys y avances para no perderlos en WhatsApp.'),
+      M('C-1', 'luis', ayer + ' 10:40:00', 'Va. Hoy subo las primeras propuestas de banners para Mercado Libre y redes.'),
+      M('C-1', 'julio', ayer + ' 11:05:00', '¿Los descuentos son los mismos que el año pasado? Para tener listas las respuestas a clientes.'),
+      M('C-1', 'admin', hoy + ' 09:02:00', 'Descuentos en revisión con Dirección; mañana los confirmo.'),
+      M('C-1', 'luis', hoy + ' 10:15:00', 'Listo el primer banner, falta ajustar el precio cuando confirmen.'),
+      M('C-2', 'luis', ayer + ' 16:20:00', 'Ya tengo las instrucciones y las fotos. Me falta la edición final.'),
+      M('C-2', 'admin', ayer + ' 16:45:00', 'Perfecto. Cuando lo tengas, compártelo aquí antes de mandarlo a almacén.'),
+      M('C-3', 'julio', hoy + ' 08:31:00', 'Hoy entraron 14 preguntas antes de las 9. Las respondí todas; dejo pendientes 2 de compatibilidad.')
+    ].map((m, i) => ({ seq: i + 1, ...m }));
+    db.seqMsg = db.msgs.length; db.seqConv = 3; db.revChat = 1;
+    db.lec = { admin: { 'C-1': 3, 'C-2': 2, 'C-3': 0 }, julio: { 'C-1': 4, 'C-3': 1 }, luis: { 'C-1': 5, 'C-2': 1 } };
+    db.convs.forEach(c => resumirConv(db, c));
+  }
+  function resumirConv(db, c) {
+    const ms = db.msgs.filter(m => m.conv === c.id);
+    const u = ms[ms.length - 1];
+    c.n = ms.length; c.ultimoSeq = u ? u.seq : 0; c.ultimo = u ? u.fecha : c.creado;
+    c.ultimoAutor = u ? u.nombre : ''; c.ultimoTexto = u ? (u.eliminado ? 'Mensaje eliminado' : vistaPrevia(u.texto, u.adjuntos)) : '';
+  }
+  function vistaPrevia(texto, adj) {
+    if (texto) return texto.replace(/\s+/g, ' ').slice(0, 140);
+    const img = adj.filter(a => /^image\//.test(a.tipo)).length, vid = adj.filter(a => /^video\//.test(a.tipo)).length;
+    if (img && img === adj.length) return img === 1 ? 'Imagen' : img + ' imágenes';
+    if (vid && vid === adj.length) return vid === 1 ? 'Video' : vid + ' videos';
+    return adj.length === 1 ? 'Archivo: ' + adj[0].nombre : adj.length + ' archivos';
+  }
+  const verConv = (c, u) => c.creadoPor === u.usuario || norm(c.participantes) === 'todos' || c.participantes.split(',').includes(u.usuario);
+  const convPub = (db, c, u) => ({ ...c, noLeidos: Math.max(0, c.n - ((db.lec[u.usuario] || {})[c.id] || 0)) });
+  const leido = (db, u, id) => { const c = db.convs.find(x => x.id === id); if (c) { db.lec[u.usuario] = db.lec[u.usuario] || {}; db.lec[u.usuario][id] = c.n; } };
+  const partes = (v, creador) => {
+    if (!v || norm(v) === 'todos' || String(v).split(',').some(x => norm(x) === 'todos')) return 'Todos';
+    const l = [...new Set(String(v).split(',').map(x => x.trim().toLowerCase()).concat([creador]))].filter(x => USERS.some(u => u.usuario === x));
+    return l.length < 2 ? null : l.join(',');
+  };
+  /* Archivos adjuntos del demo: en memoria (y en el navegador si caben) */
+  const ARCH = {};
+  function archivo(id) {
+    if (ARCH[id]) return ARCH[id];
+    try { return localStorage.getItem('nexo_demo_file_' + id) || ''; } catch (_) { return ''; }
+  }
+
+  const cargar = () => {
+    let x = null;
+    try { x = JSON.parse(localStorage.getItem(KEY)); } catch (_) {}
+    if (!x || !x.acts) x = mem || semilla();
+    if (!x.convs) semillaChat(x);
+    return (mem = x);
+  };
   const salvar = x => { mem = x; try { localStorage.setItem(KEY, JSON.stringify(x)); } catch (_) {} };
   const pub = u => ({ usuario: u.usuario, nombre: u.nombre, rol: u.rol });
   const difs = (a, d) => CAMPOS_EDIT.filter(k => String(a[k] ?? '') !== String(d[k] ?? '')).map(k => ({ campo: k, antes: a[k] || '', despues: d[k] || '' }));
@@ -1556,7 +2455,89 @@ const Demo = (() => {
     const ahora = ahoraTxt();
     switch (req.action) {
       case 'logout': return { ok: true };
-      case 'bootstrap': reinicio(db); return { ok: true, usuario: pub(u), usuarios: USERS.map(pub), actividades: db.acts.map(a => ({ ...a })), documentos: db.docs.filter(d => verDoc(d, u)).map(d => ({ ...d })), rev: db.rev };
+      case 'bootstrap': reinicio(db); salvar(db); return { ok: true, usuario: pub(u), usuarios: USERS.map(pub), actividades: db.acts.map(a => ({ ...a })), documentos: db.docs.filter(d => verDoc(d, u)).map(d => ({ ...d })), rev: db.rev,
+        conversaciones: db.convs.filter(c => verConv(c, u)).map(c => convPub(db, c, u)), revChat: db.revChat };
+      case 'chatPoll': {
+        if (Number(req.revChat) === db.revChat) return { ok: true, cambios: false, revChat: db.revChat };
+        const res = { ok: true, cambios: true, revChat: db.revChat };
+        const c = req.conv && db.convs.find(x => x.id === req.conv);
+        if (c && verConv(c, u)) {
+          const ms = db.msgs.filter(m => m.conv === c.id);
+          res.mensajes = ms.filter(m => m.seq > (Number(req.desde) || 0)).map(m => ({ ...m }));
+          res.eliminados = ms.filter(m => m.seq <= (Number(req.desde) || 0) && m.eliminado).map(m => m.seq);
+          leido(db, u, c.id); salvar(db);
+        }
+        res.conversaciones = db.convs.filter(x => verConv(x, u)).map(x => convPub(db, x, u));
+        return res;
+      }
+      case 'chatAbrir': {
+        const c = db.convs.find(x => x.id === req.id);
+        if (!c || !verConv(c, u)) return { ok: false, error: 'NOEXISTE', mensaje: 'Esta conversación ya no existe o no tienes acceso.' };
+        let l = db.msgs.filter(m => m.conv === c.id && (!req.antesDe || m.seq < req.antesDe));
+        const hayMas = l.length > 80; l = l.slice(-80);
+        if (!req.antesDe) { leido(db, u, c.id); salvar(db); }
+        return { ok: true, conversacion: convPub(db, c, u), mensajes: l.map(m => ({ ...m })), hayMas };
+      }
+      case 'chatSubir': {
+        if (u.rol === 'lector') return { ok: false, error: 'PERMISO', mensaje: 'Tu usuario solo puede consultar.' };
+        const d = req.datos || {};
+        const bytes = Math.floor(String(d.base64 || '').length * 3 / 4);
+        if (bytes > MAX_MB_ADJUNTO * 1048576) return { ok: false, error: 'VALIDACION', mensaje: `El archivo pesa más de ${MAX_MB_ADJUNTO} MB. Súbelo a Drive y pega el enlace.` };
+        const id = 'demo' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        ARCH[id] = `data:${d.tipo};base64,${d.base64}`;
+        try { localStorage.setItem('nexo_demo_file_' + id, ARCH[id]); } catch (_) {}
+        return { ok: true, adjunto: { id, nombre: d.nombre, tipo: d.tipo, tam: bytes, w: d.w || 0, h: d.h || 0 } };
+      }
+      case 'chatCrear': case 'chatEditar': case 'chatEnviar': case 'chatEliminarMsg': {
+        if (u.rol === 'lector') return { ok: false, error: 'PERMISO', mensaje: 'Tu usuario solo puede consultar.' };
+        const ahoraS = ahoraTxtS();
+        if (req.action === 'chatCrear') {
+          const d = req.datos || {};
+          let titulo = String(d.titulo || '').trim().slice(0, 120);
+          if (d.clave) {
+            const a = db.acts.find(x => x.clave === d.clave);
+            if (!a) return { ok: false, error: 'VALIDACION', mensaje: 'La tarea elegida ya no existe en el tablero.' };
+            if (!titulo) titulo = a.tarea.slice(0, 120);
+            const ya = db.convs.find(c => c.clave === d.clave && !c.archivada && verConv(c, u));
+            if (ya) return { ok: false, error: 'EXISTE', mensaje: 'Esa tarea ya tiene una conversación.', conversacion: convPub(db, ya, u) };
+          }
+          if (!titulo) return { ok: false, error: 'VALIDACION', mensaje: 'Escribe de qué trata la conversación.' };
+          const p = partes(d.participantes, u.usuario);
+          if (!p) return { ok: false, error: 'VALIDACION', mensaje: 'Elige al menos a otra persona.' };
+          const c = { id: 'C-' + (++db.seqConv), titulo, clave: d.clave || '', participantes: p, creadoPor: u.usuario, creado: ahoraS, archivada: false, version: 1 };
+          resumirConv(db, c); db.convs.push(c); db.revChat++; salvar(db);
+          return { ok: true, conversacion: convPub(db, c, u), revChat: db.revChat };
+        }
+        if (req.action === 'chatEditar') {
+          const c = db.convs.find(x => x.id === req.id);
+          if (!c || !verConv(c, u)) return { ok: false, error: 'NOEXISTE', mensaje: 'Esta conversación ya no existe.' };
+          if (c.creadoPor !== u.usuario && u.rol !== 'admin') return { ok: false, error: 'PERMISO', mensaje: 'Solo quien creó la conversación puede cambiarla.' };
+          if (req.version && req.version !== c.version) return { ok: false, error: 'CONFLICTO', conversacion: convPub(db, c, u), mensaje: 'Alguien cambió esta conversación mientras la editabas.' };
+          const d = req.datos || {};
+          if (d.titulo !== undefined) { if (!String(d.titulo).trim()) return { ok: false, error: 'VALIDACION', mensaje: 'El título no puede quedar vacío.' }; c.titulo = String(d.titulo).trim().slice(0, 120); }
+          if (d.participantes !== undefined) { const p = partes(d.participantes, c.creadoPor); if (!p) return { ok: false, error: 'VALIDACION', mensaje: 'Elige al menos a otra persona.' }; c.participantes = p; }
+          if (d.archivada !== undefined) c.archivada = !!d.archivada;
+          c.version++; db.revChat++; salvar(db);
+          return { ok: true, conversacion: convPub(db, c, u), revChat: db.revChat };
+        }
+        if (req.action === 'chatEnviar') {
+          const c = db.convs.find(x => x.id === req.id);
+          if (!c || !verConv(c, u)) return { ok: false, error: 'NOEXISTE', mensaje: 'Esta conversación ya no existe o no tienes acceso.' };
+          const texto = String(req.texto || '').trim().slice(0, 4000);
+          const adj = (req.adjuntos || []).slice(0, 10).map(a => ({ id: a.id, nombre: a.nombre, tipo: a.tipo, tam: a.tam, w: a.w || 0, h: a.h || 0 }));
+          if (!texto && !adj.length) return { ok: false, error: 'VALIDACION', mensaje: 'El mensaje está vacío.' };
+          const m = { seq: ++db.seqMsg, conv: c.id, usuario: u.usuario, nombre: u.nombre, fecha: ahoraS, texto, adjuntos: adj, eliminado: false };
+          db.msgs.push(m); resumirConv(db, c); leido(db, u, c.id); db.revChat++; salvar(db);
+          return { ok: true, mensaje: { ...m }, conversacion: convPub(db, c, u), revChat: db.revChat };
+        }
+        const m = db.msgs.find(x => x.seq === Number(req.seq));
+        if (!m) return { ok: true };
+        if (m.usuario !== u.usuario && u.rol !== 'admin') return { ok: false, error: 'PERMISO', mensaje: 'Solo puedes eliminar tus propios mensajes.' };
+        Object.assign(m, { texto: '', adjuntos: [], eliminado: true });
+        const c = db.convs.find(x => x.id === m.conv); if (c) resumirConv(db, c);
+        db.revChat++; salvar(db);
+        return { ok: true, revChat: db.revChat };
+      }
       case 'poll': {
         reinicio(db);
         if (Number(req.rev) === db.rev) return { ok: true, cambios: false, rev: db.rev };
@@ -1648,7 +2629,7 @@ const Demo = (() => {
     }
     return { ok: false, error: 'ACCION', mensaje: 'Acción desconocida.' };
   }
-  return { handle };
+  return { handle, archivo };
 })();
 
 /* ── Arranque ────────────────────────────────────────────── */
